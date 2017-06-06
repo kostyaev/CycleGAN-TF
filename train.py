@@ -69,7 +69,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
 
             if step % 50 == 0:
-                log('Step %d: G_loss: %.3f, DA_loss: %.3f, DB_loss: %3.f' % (step, lossG, lossDA, lossDB))
+                log('Step %d: G_loss: %.3f, DA_loss: %.3f, DB_loss: %.3f' % (step, lossG, lossDA, lossDB))
 
             if step % 1000 == 0:
                 save_path = saver.save(sess, checkpoints_dir + "/model.ckpt", global_step=step)
