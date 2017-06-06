@@ -9,7 +9,7 @@ config.gpu_options.per_process_gpu_memory_fraction = 0.3
 
 
 def log(s):
-    sys.stdout.write(s)
+    sys.stdout.write(s + '\n')
     sys.stdout.flush()
 
 def compose(*functions):
