@@ -2,13 +2,40 @@ import tensorflow as tf
 from losses import *
 from networks import *
 
+def convert2int(image):
+  """ Transfrom from float tensor ([-1.,1.]) to int image ([0,255])
+  """
+  return tf.image.convert_image_dtype((image+1.0)/2.0, tf.uint8)
+
+def convert2float(image):
+  """ Transfrom from int image ([0,255]) to float tensor ([-1.,1.])
+  """
+  image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+  return (image/127.5) - 1.0
+
+
+def batch_convert2int(images):
+  """
+  Args:
+    images: 4D float tensor (batch_size, image_size, image_size, depth)
+  Returns:
+    4D int tensor
+  """
+  return tf.map_fn(convert2int, images, dtype=tf.uint8)
+
+def batch_convert2float(images):
+  """
+  Args:
+    images: 4D int tensor (batch_size, image_size, image_size, depth)
+  Returns:
+    4D float tensor
+  """
+  return tf.map_fn(convert2float, images, dtype=tf.float32)
+
 class CycleGAN:
 
 
     def __init__(self, img_size=128, input_ch=3, lambda_a=5, lambda_b=5, lr=2e-4, beta1=0.5):
-
-        tf.reset_default_graph()
-
         criterion_gan = mae
 
         self.a_real = tf.placeholder(tf.float32,
@@ -61,13 +88,13 @@ class CycleGAN:
         self.db_loss = (db_loss_real + db_loss_fake) / 2
 
 
-        self.da_loss_sum = tf.summary.scalar('da_loss', self.da_loss)
-        da_loss_real_sum = tf.summary.scalar('da_loss_real', da_loss_real)
-        da_loss_fake_sum = tf.summary.scalar('da_loss_fake', da_loss_fake)
+        self.da_loss_sum = tf.summary.scalar('DA/loss', self.da_loss)
+        da_loss_real_sum = tf.summary.scalar('DA/loss_real', da_loss_real)
+        da_loss_fake_sum = tf.summary.scalar('DA/loss_fake', da_loss_fake)
 
-        self.db_loss_sum = tf.summary.scalar('db_loss', self.db_loss)
-        db_loss_real_sum = tf.summary.scalar('db_loss_real', db_loss_real)
-        db_loss_fake_sum = tf.summary.scalar('db_loss_fake', db_loss_fake)
+        self.db_loss_sum = tf.summary.scalar('DB/loss', self.db_loss)
+        db_loss_real_sum = tf.summary.scalar('DB/loss_real', db_loss_real)
+        db_loss_fake_sum = tf.summary.scalar('DB/loss_fake', db_loss_fake)
 
         self.da_sum = tf.summary.merge([self.da_loss_sum, da_loss_real_sum, da_loss_fake_sum])
         self.db_sum = tf.summary.merge([self.db_loss_sum, db_loss_real_sum, db_loss_fake_sum])
@@ -76,6 +103,12 @@ class CycleGAN:
         self.GB = GB
         self.DA = DA
         self.DB = DB
+
+        tf.summary.image('A/generated', batch_convert2int(self.fake_B))
+        tf.summary.image('A/reconstruction', batch_convert2int(fake_fake_A))
+        tf.summary.image('B/generated', batch_convert2int(self.fake_A))
+        tf.summary.image('B/reconstruction', batch_convert2int(fake_fake_B))
+
 
     def get_losses(self):
         return self.g_loss, self.da_loss, self.db_loss
