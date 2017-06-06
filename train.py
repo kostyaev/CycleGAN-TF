@@ -2,9 +2,15 @@ from cycle_gan import *
 from glob import glob
 from data_loader import *
 import functools
-import logging
+import sys
 import tensorflow as tf
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.3
 
+
+def log(s):
+    sys.stdout.write(s)
+    sys.stdout.flush()
 
 def compose(*functions):
     return functools.reduce(lambda f, g: lambda x: f(g(x)), functions[::-1], lambda x: x)
@@ -63,11 +69,11 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
 
             if step % 50 == 0:
-                logging.info('Step %d: G_loss: %.3f, DA_loss: %.3f, DB_loss: %3.f' % (step, lossG, lossDA, lossDB))
+                log('Step %d: G_loss: %.3f, DA_loss: %.3f, DB_loss: %3.f' % (step, lossG, lossDA, lossDB))
 
             if step % 1000 == 0:
                 save_path = saver.save(sess, checkpoints_dir + "/model.ckpt", global_step=step)
-                logging.info("Model saved in file: %s" % save_path)
+                log("Model saved in file: %s" % save_path)
 
 
 if __name__ == '__main__':
