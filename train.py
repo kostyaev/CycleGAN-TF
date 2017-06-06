@@ -23,7 +23,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     g_loss, da_loss, db_loss = model.get_losses()
 
     summary_op = tf.summary.merge_all()
-    writer = tf.summary.FileWriter(checkpoints_dir, sess.graph)
+    writer = tf.summary.FileWriter(tensorboard_dir, sess.graph)
     saver = tf.train.Saver()
 
     lr = tf.placeholder(tf.float32, shape=[], name="lr")
