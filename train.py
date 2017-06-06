@@ -56,9 +56,9 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
         else:
             curr_lr = start_lr - start_lr*(epoch-100)/100
 
+        start_iter = time.time()
         for i in range(max(len(dataA), len(dataB))):
             step += 1
-            start_iter = time.time()
 
             batchA = generatorA.next()
             batchB = generatorB.next()
@@ -69,14 +69,15 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             _, lossG, lossDA, lossDB, summary = sess.run([optimizers, g_loss, da_loss, db_loss, summary_op],
                                                          {model.a_real: batchA, model.b_real: batchB,
                                                           model.fake_a_sample: fakeA, model.fake_b_sample: fakeB, lr: curr_lr})
-            end_iter = time.time()
 
             writer.add_summary(summary, step)
             writer.flush()
 
 
             if step % 50 == 0:
+                end_iter = time.time()
                 log('Step %d: G_loss: %.3f, DA_loss: %.3f, DB_loss: %.3f, time: %.3fs' % (step, lossG, lossDA, lossDB, end_iter - start_iter))
+                start_iter = time.time()
 
             if step % 1000 == 0:
                 save_path = saver.save(sess, checkpoints_dir + "/model.ckpt", global_step=step)
