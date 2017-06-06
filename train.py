@@ -71,12 +71,13 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
 
 if __name__ == 'main':
+    tf.reset_default_graph()
     d_dir = '/root/storage/projects/CycleGAN/datasets/makeup_face_v2/{}/*.jpg'
     data_dirs = [d_dir.format('trainA'), d_dir.format('trainB')]
 
     checkpoints_dir = 'checkpoints'
-    tensorboard_dir = '/root/storage/tensorboar/makeup_gan/'
+    tensorboard_dir = '/root/storage/tensorboard/makeup_gan/'
 
 
     with tf.Session() as sess:
-        train(sess, data_dirs=data_dirs, epochs=200, checkpoints_dir=checkpoints_dir, tensorboard_dir=tensorboard_dir)
+        train(sess, data_dirs=data_dirs, epochs=1, checkpoints_dir=checkpoints_dir, tensorboard_dir=tensorboard_dir)
