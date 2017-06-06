@@ -94,4 +94,4 @@ if __name__ == '__main__':
 
 
     with tf.Session() as sess:
-        train(sess, data_dirs=data_dirs, epochs=1, checkpoints_dir=checkpoints_dir, tensorboard_dir=tensorboard_dir)
+        train(sess, data_dirs=data_dirs, epochs=200, checkpoints_dir=checkpoints_dir, tensorboard_dir=tensorboard_dir)
