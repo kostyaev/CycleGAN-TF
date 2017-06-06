@@ -1,6 +1,6 @@
 import tensorflow as tf
 from losses import *
-from ops import *
+from networks import *
 
 class CycleGAN:
 
@@ -11,36 +11,41 @@ class CycleGAN:
 
         criterion_gan = mae
 
-        a_real = tf.placeholder(tf.float32,
+        self.a_real = tf.placeholder(tf.float32,
                                [None, img_size, img_size, input_ch], name='A_real')
-        b_real = tf.placeholder(tf.float32,
+        self.b_real = tf.placeholder(tf.float32,
                                        [None, img_size, img_size, input_ch], name='B_real')
 
-        fake_a_sample = tf.placeholder(tf.float32,
+        self.fake_a_sample = tf.placeholder(tf.float32,
                                        [None, img_size, img_size, input_ch], name='fake_A_sample')
 
-        fake_b_sample = tf.placeholder(tf.float32,
+        self.fake_b_sample = tf.placeholder(tf.float32,
                                          [None, img_size, img_size, input_ch], name='fake_B_sample')
 
-        # Generators
-        fake_B = generator(a_real, 32, name='G_A2B', reuse=False)
-        fake_fake_A = generator(fake_B, 32, name='G_B2A', reuse=False)
-        fake_A = generator(b_real, 32, name='G_B2A', reuse=True)
-        fake_fake_B = generator(fake_A, 32, name='G_A2B', reuse=True)
+        GA = Generator(32, name='G_A')
+        GB = Generator(32, name='G_B')
 
+        # Generators
+        self.fake_B = GA(self.a_real)
+        fake_fake_A = GB(self.fake_B)
+        self.fake_A = GB(self.b_real)
+        fake_fake_B = GA(self.fake_A)
+
+        DA = Discriminator(32, name='D_A')
+        DB = Discriminator(32, name='D_B')
 
         #Discriminators
-        DA_real = discriminator(a_real, 32, name='D_A', reuse=False)
-        DB_real = discriminator(b_real, 32, name='D_B', reuse=False)
+        DA_real = DA(self.a_real)
+        DB_real = DB(self.b_real)
 
-        DA_fake = discriminator(fake_A, 32, name='D_A', reuse=True)
-        DB_fake = discriminator(fake_B, 32, name='D_B', reuse=True)
-        DA_fake_sample = discriminator(fake_a_sample, 32, name='D_A', reuse=True)
-        DB_fake_sample = discriminator(fake_b_sample, 32, name='D_B', reuse=True)
+        DA_fake = DA(self.fake_A)
+        DB_fake = DB(self.fake_B)
+        DA_fake_sample = DA(self.fake_a_sample)
+        DB_fake_sample = DB(self.fake_b_sample)
 
 
         # Generator Losses
-        recon_loss = lambda_a * abs_criterion(a_real, fake_fake_A) + lambda_b * abs_criterion(b_real, fake_fake_B)
+        recon_loss = lambda_a * abs_criterion(self.a_real, fake_fake_A) + lambda_b * abs_criterion(self.b_real, fake_fake_B)
         g_loss_a2b = criterion_gan(DB_fake, tf.ones_like(DB_fake)*0.9)
         g_loss_b2a = criterion_gan(DA_fake, tf.ones_like(DA_fake)*0.9)
         self.g_loss = g_loss_a2b + g_loss_b2a + recon_loss
@@ -67,32 +72,18 @@ class CycleGAN:
         self.da_sum = tf.summary.merge([self.da_loss_sum, da_loss_real_sum, da_loss_fake_sum])
         self.db_sum = tf.summary.merge([self.db_loss_sum, db_loss_real_sum, db_loss_fake_sum])
 
+        self.GA = GA
+        self.GB = GB
+        self.DA = DA
+        self.DB = DB
+
+    def get_losses(self):
+        return self.g_loss, self.da_loss, self.db_loss
 
 
-    def initialize(self, sess):
-        init_op = tf.global_variables_initializer()
-        sess.run(init_op)
 
 
-    def forward(self, sess):
-        pass
 
-
-    def train(self, sess, epochs, lr, beta1):
-        writer = tf.summary.FileWriter("/root/storage/tensorboard/", sess.graph)
-        counter = 0
-
-        t_vars = tf.trainable_variables()
-        db_vars = [var for var in t_vars if 'D_B' in var.name]
-        da_vars = [var for var in t_vars if 'D_A' in var.name]
-        g_vars_a2b = [var for var in t_vars if 'G_A2B' in var.name]
-        g_vars_b2a = [var for var in t_vars if 'G_B2A' in var.name]
-        g_vars = [var for var in t_vars if 'G_' in var.name]
-
-
-        self.da_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(self.da_loss, var_list=da_vars)
-        self.db_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(self.db_loss, var_list=db_vars)
-        self.g_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(self.g_loss, var_list=g_vars)
 
 
 
