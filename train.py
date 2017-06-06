@@ -70,7 +70,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
                 logging.info("Model saved in file: %s" % save_path)
 
 
-if __name__ == 'main':
+if __name__ == '__main__':
     tf.reset_default_graph()
     d_dir = '/root/storage/projects/CycleGAN/datasets/makeup_face_v2/{}/*.jpg'
     data_dirs = [d_dir.format('trainA'), d_dir.format('trainB')]
