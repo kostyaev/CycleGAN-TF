@@ -19,7 +19,7 @@ def compose(*functions):
 
 
 def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='snapshots/', tensorboard_dir='tensorboard'):
-    model = CycleGAN()
+    model = CycleGAN(lambda_a=10.0, lambda_b=10.0)
     g_loss, da_loss, db_loss = model.get_losses()
 
     summary_op = tf.summary.merge_all()
