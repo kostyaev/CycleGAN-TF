@@ -4,6 +4,8 @@ from data_loader import *
 import functools
 import sys
 import tensorflow as tf
+import time
+
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.3
 
@@ -45,7 +47,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     init = tf.global_variables_initializer()
     sess.run(init)
-
+    step = 0
 
     for epoch in range(1, epochs+1):
 
@@ -54,7 +56,10 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
         else:
             curr_lr = start_lr - start_lr*(epoch-100)/100
 
-        for step in range(max(len(dataA), len(dataB))):
+        for i in range(max(len(dataA), len(dataB))):
+            step += 1
+            start_iter = time.time()
+
             batchA = generatorA.next()
             batchB = generatorB.next()
 
@@ -64,12 +69,14 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             _, lossG, lossDA, lossDB, summary = sess.run([optimizers, g_loss, da_loss, db_loss, summary_op],
                                                          {model.a_real: batchA, model.b_real: batchB,
                                                           model.fake_a_sample: fakeA, model.fake_b_sample: fakeB, lr: curr_lr})
+            end_iter = time.time()
+
             writer.add_summary(summary, step)
             writer.flush()
 
 
             if step % 50 == 0:
-                log('Step %d: G_loss: %.3f, DA_loss: %.3f, DB_loss: %.3f' % (step, lossG, lossDA, lossDB))
+                log('Step %d: G_loss: %.3f, DA_loss: %.3f, DB_loss: %.3f, time: %.3fs' % (step, lossG, lossDA, lossDB, end_iter - start_iter))
 
             if step % 1000 == 0:
                 save_path = saver.save(sess, checkpoints_dir + "/model.ckpt", global_step=step)
