@@ -85,6 +85,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
         step = 0
 
     for epoch in range(1, epochs+1):
+        log('starting epoch: %d' % epoch)
         if epoch < 100:
             curr_lr = start_lr
         else:
@@ -126,6 +127,8 @@ if __name__ == '__main__':
 
     tensorboard_dir = os.path.join(args.tensorboard, args.name)
     checkpoints_dir = os.path.join(args.checkpoint, args.name)
+
+    print trainA, trainB
 
     with tf.Session() as sess:
         train(sess,
