@@ -26,6 +26,7 @@ parser.add_argument("--ndf", type=int, default=32, help="number of discriminator
 parser.add_argument("--scale_size", type=int, default=286, help="scale images to this size before cropping to 256x256")
 parser.add_argument("--crop_size", type=int, default=256, help="crop size")
 parser.add_argument("--batch_size", type=int, default=1, help='training batch size')
+parser.add_argument("--save_freq", type=int, default=6000, help='Save checkpoint frequency')
 
 
 args = parser.parse_args()
@@ -113,7 +114,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
                 log('Step %d: G_loss: %.3f, DA_loss: %.3f, DB_loss: %.3f, time: %.3fs' % (step, lossG, lossDA, lossDB, end_iter - start_iter))
                 start_iter = time.time()
 
-            if step % 6000 == 0:
+            if step % args.save_freq == 0:
                 save_path = saver.save(sess, checkpoints_dir + "/model.ckpt", global_step=step)
                 log("Model saved in file: %s" % save_path)
 
