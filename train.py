@@ -115,7 +115,9 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
                 start_iter = time.time()
 
             if step % args.save_freq == 0:
-                save_path = saver.save(sess, checkpoints_dir + "/model.ckpt", global_step=step)
+                if not os.path.exists(checkpoints_dir):
+                    os.makedirs(checkpoints_dir)
+                save_path = saver.save(sess, checkpoints_dir + "/model_epoch_%d.ckpt" % epoch, global_step=step)
                 log("Model saved in file: %s" % save_path)
 
 
