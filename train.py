@@ -50,12 +50,12 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     if ckpt and ckpt.model_checkpoint_path:
         ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
         log('Loading saved checkpoint: %s' % ckpt_name)
-        saver.restore(sess, checkpoints_dir + ckpt_name)
+        saver.restore(sess, os.path.join(checkpoints_dir, ckpt_name))
+        step = int(ckpt_name.split('-')[1])
     else:
         init = tf.global_variables_initializer()
         sess.run(init)
-
-    step = 0
+        step = 0
 
     for epoch in range(1, epochs+1):
         if epoch < 100:
