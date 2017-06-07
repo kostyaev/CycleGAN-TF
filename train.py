@@ -96,7 +96,7 @@ if __name__ == '__main__':
     d_dir = '/root/storage/projects/CycleGAN/datasets/makeup_face_v2/{}/*.jpg'
     data_dirs = [d_dir.format('trainA'), d_dir.format('trainB')]
 
-    checkpoints_dir = 'checkpoints'
+    checkpoints_dir = 'checkpoints/'
     tensorboard_dir = '/root/storage/tensorboard/makeup_gan_256/'
 
 
