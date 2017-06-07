@@ -90,7 +90,7 @@ if __name__ == '__main__':
     data_dirs = [d_dir.format('trainA'), d_dir.format('trainB')]
 
     checkpoints_dir = 'checkpoints'
-    tensorboard_dir = '/root/storage/tensorboard/makeup_gan/'
+    tensorboard_dir = '/root/storage/tensorboard/makeup_gan_256/'
 
 
     with tf.Session() as sess:
