@@ -24,7 +24,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     summary_op = tf.summary.merge_all()
     writer = tf.summary.FileWriter(tensorboard_dir, sess.graph)
-    saver = tf.train.Saver()
+    saver = tf.train.Saver(max_to_keep=100)
 
     lr = tf.placeholder(tf.float32, shape=[], name="lr")
 
@@ -38,8 +38,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     dataA = glob(data_dirs[0])
     dataB = glob(data_dirs[1])
 
-    crop_f = functools.partial(crop, crop_size=128, center=True)
-    resize_f = functools.partial(resize_aspect, maxPx=143, minPx=143)
+    crop_f = functools.partial(crop, crop_size=256, center=True)
+    resize_f = functools.partial(resize_aspect, maxPx=286, minPx=286)
 
     train_pipeline = compose(load_image, resize_f, crop_f, img2array, preprocess)
     generatorA = batch_generator(lambda:image_generator(dataA, train_pipeline, shuffle=False), 1)

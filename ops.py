@@ -24,7 +24,7 @@ def conv2d(x, n_out, ks, stride=1, padding='SAME', name='conv2d', stddev=0.02):
 
 def conv2d_simple(x, n_out, ks, stride=1, padding='SAME', activation_fn=tf.nn.tanh,  name='conv2d', stddev=0.02):
     with tf.variable_scope(name):
-        x = slim.conv2d(x, n_out, ks, stride, padding=padding, activation_fn = None,
+        x = slim.conv2d(x, n_out, ks, stride, padding=padding, activation_fn = activation_fn,
                        weights_initializer=tf.truncated_normal_initializer(stddev=stddev))
         return x
 

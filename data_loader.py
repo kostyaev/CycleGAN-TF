@@ -8,12 +8,12 @@ def img2array(img):
         a = a[:, :, np.newaxis]
     return a
 
-
 def preprocess(a):
     return a / 127.5 - 1
 
 def postprocess(a):
-    return (a + 1) * 127.5
+    a = (a + 1) * 127.5
+    return np.clip(a, 0, 255).astype(np.uint8)
 
 def randint(a, b):
     """Returns random uniform value between a and b inclusively"""
