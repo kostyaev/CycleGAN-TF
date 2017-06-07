@@ -35,7 +35,7 @@ def batch_convert2float(images):
 class CycleGAN:
 
 
-    def __init__(self, img_size=None, input_ch=3, lambda_a=5, lambda_b=5, lr=2e-4, beta1=0.5):
+    def __init__(self, name, img_size=None, ngf=32, ndf=32, input_ch=3, lambda_a=5, lambda_b=5):
         criterion_gan = mae
 
         self.a_real = tf.placeholder(tf.float32,
@@ -49,8 +49,8 @@ class CycleGAN:
         self.fake_b_sample = tf.placeholder(tf.float32,
                                          [None, img_size, img_size, input_ch], name='fake_B_sample')
 
-        GA = Generator(32, name='G_A')
-        GB = Generator(32, name='G_B')
+        GA = Generator(ngf, name='G_A')
+        GB = Generator(ngf, name='G_B')
 
         # Generators
         self.fake_B = GA(self.a_real)
@@ -58,8 +58,8 @@ class CycleGAN:
         self.fake_A = GB(self.b_real)
         fake_fake_B = GA(self.fake_A)
 
-        DA = Discriminator(32, name='D_A')
-        DB = Discriminator(32, name='D_B')
+        DA = Discriminator(ndf, name='D_A')
+        DB = Discriminator(ndf, name='D_B')
 
         #Discriminators
         DA_real = DA(self.a_real)
@@ -88,6 +88,8 @@ class CycleGAN:
         self.db_loss = (db_loss_real + db_loss_fake) / 2
 
 
+        self.g_loss_sum = tf.summary.scalar('G/loss', self.g_loss)
+
         self.da_loss_sum = tf.summary.scalar('DA/loss', self.da_loss)
         da_loss_real_sum = tf.summary.scalar('DA/loss_real', da_loss_real)
         da_loss_fake_sum = tf.summary.scalar('DA/loss_fake', da_loss_fake)
@@ -104,13 +106,13 @@ class CycleGAN:
         self.DA = DA
         self.DB = DB
 
-        tf.summary.image('ModelA/original', batch_convert2int(self.a_real))
-        tf.summary.image('ModelA/generated', batch_convert2int(self.fake_B))
-        tf.summary.image('ModelA/reconstruction', batch_convert2int(fake_fake_A))
+        tf.summary.image(name + '/ModelA/original', batch_convert2int(self.a_real))
+        tf.summary.image(name + '/ModelA/generated', batch_convert2int(self.fake_B))
+        tf.summary.image(name + '/ModelA/reconstruction', batch_convert2int(fake_fake_A))
 
-        tf.summary.image('ModelB/original', batch_convert2int(self.b_real))
-        tf.summary.image('ModelB/generated', batch_convert2int(self.fake_A))
-        tf.summary.image('ModelB/reconstruction', batch_convert2int(fake_fake_B))
+        tf.summary.image(name + '/ModelB/original', batch_convert2int(self.b_real))
+        tf.summary.image(name + '/ModelB/generated', batch_convert2int(self.fake_A))
+        tf.summary.image(name + '/ModelB/reconstruction', batch_convert2int(fake_fake_B))
 
 
     def get_losses(self):

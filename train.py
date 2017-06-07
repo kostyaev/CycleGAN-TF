@@ -5,22 +5,47 @@ import functools
 import sys
 import tensorflow as tf
 import time
+import argparse
 import os
 
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.3
 
 
+parser = argparse.ArgumentParser()
+
+parser.add_argument("--name", help="Name of the experiment")
+parser.add_argument("--seed", default=0, type=int)
+parser.add_argument("--dataset", help="path to folder containing images")
+parser.add_argument("--checkpoint", default='checkpoints/', help="directory with checkpoint to resume training from or use for testing")
+parser.add_argument("--tensorboard", default='tensorboard/', help='tensorboard dir')
+parser.add_argument("--max_epochs", default=200, type=int, help="number of training epochs")
+
+parser.add_argument("--ngf", type=int, default=32, help="number of generator filters in first conv layer")
+parser.add_argument("--ndf", type=int, default=32, help="number of discriminator filters in first conv layer")
+parser.add_argument("--scale_size", type=int, default=286, help="scale images to this size before cropping to 256x256")
+parser.add_argument("--crop_size", type=int, default=256, help="crop size")
+parser.add_argument("--batch_size", type=int, default=1, help='training batch size')
+
+
+args = parser.parse_args()
+
+
 def log(s):
     sys.stdout.write(s + '\n')
     sys.stdout.flush()
+
 
 def compose(*functions):
     return functools.reduce(lambda f, g: lambda x: f(g(x)), functions[::-1], lambda x: x)
 
 
+def random_subset(f_list, min_len=0, max_len=1):
+    return np.random.choice(f_list, randint(min_len, max_len), replace=False)
+
+
 def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='snapshots/', tensorboard_dir='tensorboard'):
-    model = CycleGAN(lambda_a=10.0, lambda_b=10.0)
+    model = CycleGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ngf=args.ngf, ndf=args.ndf)
     g_loss, da_loss, db_loss = model.get_losses()
 
     summary_op = tf.summary.merge_all()
@@ -40,19 +65,19 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     dataA = glob(data_dirs[0])
     dataB = glob(data_dirs[1])
 
-    crop_f = functools.partial(crop, crop_size=256, center=True)
-    resize_f = functools.partial(resize_aspect, maxPx=286, minPx=286)
+    mirror_f = lambda x: compose(*random_subset([mirror], min_len=0, max_len=1))(x)
+    crop_f = functools.partial(crop, crop_size=args.crop_size, center=False)
+    resize_f = functools.partial(resize, min_px=args.crop_size, max_px=args.scale_size)
 
-    train_pipeline = compose(load_image, resize_f, crop_f, img2array, preprocess)
-    generatorA = batch_generator(lambda:image_generator(dataA, train_pipeline, shuffle=False), 1)
-    generatorB = batch_generator(lambda:image_generator(dataB, train_pipeline, shuffle=False), 1)
+    train_pipeline = compose(load_image, mirror_f, resize_f, crop_f, img2array, preprocess)
+    generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=False), args.batch_size)
+    generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=False), args.batch_size)
 
     init = tf.global_variables_initializer()
     sess.run(init)
 
     ckpt = tf.train.latest_checkpoint(checkpoints_dir)
     if ckpt:
-        # ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
         log('Loading saved checkpoint: %s' % ckpt)
         restorer.restore(sess, ckpt)
         step = int(ckpt.split('-')[1])
@@ -82,7 +107,6 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             writer.add_summary(summary, step)
             writer.flush()
 
-
             if step % 50 == 0:
                 end_iter = time.time()
                 log('Step %d: G_loss: %.3f, DA_loss: %.3f, DB_loss: %.3f, time: %.3fs' % (step, lossG, lossDA, lossDB, end_iter - start_iter))
@@ -95,12 +119,17 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
 if __name__ == '__main__':
     tf.reset_default_graph()
-    d_dir = '/root/storage/projects/CycleGAN/datasets/makeup_face_v2/{}/*.jpg'
-    data_dirs = [d_dir.format('trainA'), d_dir.format('trainB')]
+    tf.set_random_seed(args.seed)
 
-    checkpoints_dir = 'checkpoints/'
-    tensorboard_dir = '/root/storage/tensorboard/makeup_gan_256/'
+    trainA = os.path.join(args.dataset, 'trainA') + '/*.jpg'
+    trainB = os.path.join(args.dataset, 'trainB') + '/*.jpg'
 
+    tensorboard_dir = os.path.join(args.tensorboard, args.name)
+    checkpoints_dir = os.path.join(args.checkpoint, args.name)
 
     with tf.Session() as sess:
-        train(sess, data_dirs=data_dirs, epochs=200, checkpoints_dir=checkpoints_dir, tensorboard_dir=tensorboard_dir)
+        train(sess,
+              data_dirs=[trainA, trainB],
+              epochs=200,
+              checkpoints_dir=checkpoints_dir,
+              tensorboard_dir=tensorboard_dir)
