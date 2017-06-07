@@ -25,6 +25,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     summary_op = tf.summary.merge_all()
     writer = tf.summary.FileWriter(tensorboard_dir, sess.graph)
+    restorer = tf.train.Saver()
     saver = tf.train.Saver(max_to_keep=100)
 
     lr = tf.placeholder(tf.float32, shape=[], name="lr")
@@ -46,15 +47,16 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     generatorA = batch_generator(lambda:image_generator(dataA, train_pipeline, shuffle=False), 1)
     generatorB = batch_generator(lambda:image_generator(dataB, train_pipeline, shuffle=False), 1)
 
-    ckpt = tf.train.get_checkpoint_state(checkpoints_dir)
-    if ckpt and ckpt.model_checkpoint_path:
-        ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
-        log('Loading saved checkpoint: %s' % ckpt_name)
-        saver.restore(sess, os.path.join(checkpoints_dir, ckpt_name))
-        step = int(ckpt_name.split('-')[1])
+    init = tf.global_variables_initializer()
+    sess.run(init)
+
+    ckpt = tf.train.latest_checkpoint(checkpoints_dir)
+    if ckpt:
+        # ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
+        log('Loading saved checkpoint: %s' % ckpt)
+        restorer.restore(sess, ckpt)
+        step = int(ckpt.split('-')[1])
     else:
-        init = tf.global_variables_initializer()
-        sess.run(init)
         step = 0
 
     for epoch in range(1, epochs+1):
