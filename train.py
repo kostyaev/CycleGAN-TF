@@ -5,6 +5,7 @@ import functools
 import sys
 import tensorflow as tf
 import time
+import os
 
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.3
@@ -45,12 +46,18 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     generatorA = batch_generator(lambda:image_generator(dataA, train_pipeline, shuffle=False), 1)
     generatorB = batch_generator(lambda:image_generator(dataB, train_pipeline, shuffle=False), 1)
 
-    init = tf.global_variables_initializer()
-    sess.run(init)
+    ckpt = tf.train.get_checkpoint_state(checkpoints_dir)
+    if ckpt and ckpt.model_checkpoint_path:
+        ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
+        log('Loading saved checkpoint: %d' % ckpt_name)
+        saver.restore(sess, checkpoints_dir + ckpt_name)
+    else:
+        init = tf.global_variables_initializer()
+        sess.run(init)
+
     step = 0
 
     for epoch in range(1, epochs+1):
-
         if epoch < 100:
             curr_lr = start_lr
         else:

@@ -104,10 +104,13 @@ class CycleGAN:
         self.DA = DA
         self.DB = DB
 
-        tf.summary.image('A/generated', batch_convert2int(self.fake_B))
-        tf.summary.image('A/reconstruction', batch_convert2int(fake_fake_A))
-        tf.summary.image('B/generated', batch_convert2int(self.fake_A))
-        tf.summary.image('B/reconstruction', batch_convert2int(fake_fake_B))
+        tf.summary.image('ModelA/original', batch_convert2int(self.a_real))
+        tf.summary.image('ModelA/generated', batch_convert2int(self.fake_B))
+        tf.summary.image('ModelA/reconstruction', batch_convert2int(fake_fake_A))
+
+        tf.summary.image('ModelB/original', batch_convert2int(self.b_real))
+        tf.summary.image('ModelB/generated', batch_convert2int(self.fake_A))
+        tf.summary.image('ModelB/reconstruction', batch_convert2int(fake_fake_B))
 
 
     def get_losses(self):
