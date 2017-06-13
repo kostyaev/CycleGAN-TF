@@ -28,18 +28,18 @@ def load_image(path):
     return Image.open(path)
 
 
-def resize_aspect(img, minPx=128, maxPx=128):
+def resize_aspect(img, min_px=128, max_px=128):
     width = img.size[0]
     height = img.size[1]
     smallest = min(width, height)
     largest = max(width, height)
     k = 1
-    if largest > maxPx:
-        k = maxPx / float(largest)
+    if largest > max_px:
+        k = max_px / float(largest)
         smallest *= k
         largest *= k
-    if smallest < minPx:
-        k *= minPx / float(smallest)
+    if smallest < min_px:
+        k *= min_px / float(smallest)
     size = int(math.ceil(width * k)), int(math.ceil(height * k))
     img = img.resize(size, Image.BILINEAR)
     return img
