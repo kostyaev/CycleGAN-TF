@@ -58,8 +58,8 @@ class CycleGAN:
         self.fake_A = GB(self.b_real)
         rec_B = GA(self.fake_A)
 
-        DA = Discriminator(ndf, name='D_A', d_num_layers)
-        DB = Discriminator(ndf, name='D_B', d_num_layers)
+        DA = Discriminator(ndf, name='D_A', num_layers=d_num_layers)
+        DB = Discriminator(ndf, name='D_B', num_layers=d_num_layers)
 
         #Discriminators
         DA_fake = DA(self.fake_A)
