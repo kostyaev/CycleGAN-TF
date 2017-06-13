@@ -74,8 +74,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     resize_f = functools.partial(resize_aspect_random, min_px=args.crop_size, max_px=args.scale_size)
 
     train_pipeline = compose(load_image, mirror_f, resize_f, crop_f, img2array, preprocess)
-    generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=False), args.batch_size)
-    generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=False), args.batch_size)
+    generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=True), args.batch_size)
+    generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=True), args.batch_size)
 
     poolA = ImagePool(50)
     poolB = ImagePool(50)
