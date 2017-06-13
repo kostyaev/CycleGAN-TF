@@ -75,7 +75,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=False), args.batch_size)
     generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=False), args.batch_size)
 
-    image_pool = ImagePool(50)
+    poolA = ImagePool(50)
+    poolB = ImagePool(50)
 
 
     init = tf.global_variables_initializer()
@@ -106,7 +107,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             input_real = {model.a_real: batchA, model.b_real: batchB}
             fakeA, fakeB = sess.run([model.fake_A, model.fake_B], input_real)
 
-            fake_a_sample, fake_b_sample = image_pool.query((fakeA, fakeB))
+            fake_a_sample, fake_b_sample = poolA.query(fakeA), poolB.query(fakeB)
 
 
             _, lossG, lossDA, lossDB, summary = sess.run([optimizers, g_loss, da_loss, db_loss, summary_op],
