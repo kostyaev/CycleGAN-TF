@@ -46,7 +46,7 @@ def random_subset(f_list, min_len=0, max_len=1):
 
 
 def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='snapshots/', tensorboard_dir='tensorboard'):
-    model = CycleGAN(name=args.name, lambda_a=5.0, lambda_b=5.0, ngf=args.ngf, ndf=args.ndf)
+    model = CycleGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ngf=args.ngf, ndf=args.ndf)
     g_loss, da_loss, db_loss = model.get_losses()
 
     summary_op = tf.summary.merge_all()
@@ -71,8 +71,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     resize_f = functools.partial(resize_aspect, min_px=args.crop_size, max_px=args.crop_size)
 
     train_pipeline = compose(load_image, resize_f, crop_f, img2array, preprocess)
-    generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=True), args.batch_size)
-    generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=True), args.batch_size)
+    generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=False), args.batch_size)
+    generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=False), args.batch_size)
 
     init = tf.global_variables_initializer()
     sess.run(init)
@@ -123,7 +123,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
 if __name__ == '__main__':
     tf.reset_default_graph()
-    tf.set_random_seed(args.seed)
+    # tf.set_random_seed(args.seed)
 
     trainA = os.path.join(args.dataset, 'trainA') + '/*.jpg'
     trainB = os.path.join(args.dataset, 'trainB') + '/*.jpg'
