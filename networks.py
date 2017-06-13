@@ -53,8 +53,8 @@ class Discriminator:
                 x = slim.conv2d(x, self.ndf * mult, ks, stride=2, padding=padding, activation_fn=None)
                 x = instance_norm(x)
                 x = lrelu(x)
-                mult *= stride
-                mult = min(2, 8)
+                mult *= 2
+                mult = min(mult, 8)
 
             x = slim.conv2d(x, self.ndf * mult, ks, stride=1, padding=padding, activation_fn=None)
             x = instance_norm(x)
