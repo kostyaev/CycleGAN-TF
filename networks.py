@@ -32,7 +32,7 @@ class Generator:
 
 
 class Discriminator:
-    def __init__(self, ndf, name='discriminator'):
+    def __init__(self, ndf, name='discriminator', num_layers=3):
         self.ndf = ndf
         self.name = name
         self.reuse = False
@@ -48,7 +48,7 @@ class Discriminator:
 
             x = slim.conv2d(image, self.ndf, ks, stride=2, padding=padding, activation_fn=lrelu)
             mult = 1
-            for i in range(1):
+            for i in range(num_layers):
                 mult *= 2
                 x = slim.conv2d(x, self.ndf * mult, ks, stride=2, padding=padding, activation_fn=None)
                 x = instance_norm(x)
