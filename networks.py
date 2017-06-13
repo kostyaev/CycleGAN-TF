@@ -51,7 +51,7 @@ class Discriminator:
             mult = 2
             for i in range(1, self.num_layers + 1):
                 stride = 2 if i % 2 == 1 else 1
-                x = slim.conv2d(x, self.ndf * mult, ks, stride=2, padding=padding, activation_fn=None)
+                x = slim.conv2d(x, self.ndf * mult, ks, stride=stride, padding=padding, activation_fn=None)
                 x = instance_norm(x)
                 x = lrelu(x)
                 mult *= stride
