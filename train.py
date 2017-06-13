@@ -111,11 +111,16 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
             fake_a_sample, fake_b_sample = poolA.query(fakeA), poolB.query(fakeB)
 
-            ops = [optimizers, g_loss, da_loss, db_loss, summary_op] if i % args.display_freq == 0 else [optimizers, g_loss, da_loss, db_loss]
+            ops = [optimizers, g_loss, da_loss, db_loss]
 
-            _, lossG, lossDA, lossDB, summary = sess.run(ops,
+            if i % args.display_freq == 0:
+                 _, lossG, lossDA, lossDB, summary = sess.run(ops + [summary_op],
                                                          {model.a_real: batchA, model.b_real: batchB,
                                                           model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
+            else:
+                _, lossG, lossDA, lossDB = sess.run(ops,
+                                                    {model.a_real: batchA, model.b_real: batchB,
+                                                    model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
 
             writer.add_summary(summary, step)
             writer.flush()
