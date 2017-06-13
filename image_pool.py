@@ -2,7 +2,7 @@ import random
 
 class ImagePool:
 
-    def __init(self, pool_size=50):
+    def __init__(self, pool_size=50):
         self.pool_size = pool_size
         self.pool_images = []
 
