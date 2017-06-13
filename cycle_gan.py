@@ -54,38 +54,37 @@ class CycleGAN:
 
         # Generators
         self.fake_B = GA(self.a_real)
-        fake_fake_A = GB(self.fake_B)
+        rec_A = GB(self.fake_B)
         self.fake_A = GB(self.b_real)
-        fake_fake_B = GA(self.fake_A)
+        rec_B = GA(self.fake_A)
 
         DA = Discriminator(ndf, name='D_A')
         DB = Discriminator(ndf, name='D_B')
 
         #Discriminators
-        DA_real = DA(self.a_real)
-        DB_real = DB(self.b_real)
-
         DA_fake = DA(self.fake_A)
         DB_fake = DB(self.fake_B)
+
+
+        # Generator Losses
+        recon_loss = lambda_a * abs_criterion(self.a_real, rec_A) + lambda_b * abs_criterion(self.b_real, rec_B)
+        self.g_loss = criterion_gan(DB_fake, 0.9) + criterion_gan(DA_fake, 0.9) + recon_loss
+
+
+        DA_real = DA(self.a_real)
+        DB_real = DB(self.b_real)
         DA_fake_sample = DA(self.fake_a_sample)
         DB_fake_sample = DB(self.fake_b_sample)
 
 
-        # Generator Losses
-        recon_loss = lambda_a * abs_criterion(self.a_real, fake_fake_A) + lambda_b * abs_criterion(self.b_real, fake_fake_B)
-        g_loss_a2b = criterion_gan(DB_fake, tf.ones_like(DB_fake)*0.9)
-        g_loss_b2a = criterion_gan(DA_fake, tf.ones_like(DA_fake)*0.9)
-        self.g_loss = g_loss_a2b + g_loss_b2a + recon_loss
-
-
         # Discriminator Losses
-        da_loss_real = criterion_gan(DA_real, tf.ones_like(DA_real)*0.9)
-        da_loss_fake = criterion_gan(DA_fake_sample, tf.zeros_like(DA_fake_sample))
-        self.da_loss = (da_loss_real + da_loss_fake) / 2
+        da_loss_real = criterion_gan(DA_real, 0.9)
+        da_loss_fake = criterion_gan(DA_fake_sample, 0)
+        self.da_loss = (da_loss_real + da_loss_fake) * 0.5
 
-        db_loss_real = criterion_gan(DB_real, tf.ones_like(DB_real)*0.9)
-        db_loss_fake = criterion_gan(DB_fake_sample, tf.zeros_like(DB_fake_sample))
-        self.db_loss = (db_loss_real + db_loss_fake) / 2
+        db_loss_real = criterion_gan(DB_real, 0.9)
+        db_loss_fake = criterion_gan(DB_fake_sample, 0)
+        self.db_loss = (db_loss_real + db_loss_fake) * 0.5
 
 
         self.g_loss_sum = tf.summary.scalar('G/loss', self.g_loss)
