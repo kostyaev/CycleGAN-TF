@@ -50,10 +50,11 @@ class Discriminator:
             x = slim.conv2d(image, self.ndf, ks, stride=2, padding=padding, activation_fn=lrelu)
             mult = 2
             for i in range(1, self.num_layers + 1):
+                stride = 2 if i % 2 == 1 else 1
                 x = slim.conv2d(x, self.ndf * mult, ks, stride=2, padding=padding, activation_fn=None)
                 x = instance_norm(x)
                 x = lrelu(x)
-                mult *= 2
+                mult *= stride
                 mult = min(mult, 8)
 
             x = slim.conv2d(x, self.ndf * mult, ks, stride=1, padding=padding, activation_fn=None)
