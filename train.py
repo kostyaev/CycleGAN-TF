@@ -46,7 +46,7 @@ def random_subset(f_list, min_len=0, max_len=1):
 
 
 def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='snapshots/', tensorboard_dir='tensorboard'):
-    model = CycleGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ngf=args.ngf, ndf=args.ndf)
+    model = CycleGAN(name=args.name, lambda_a=5.0, lambda_b=5.0, ngf=args.ngf, ndf=args.ndf)
     g_loss, da_loss, db_loss = model.get_losses()
 
     summary_op = tf.summary.merge_all()
