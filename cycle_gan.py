@@ -35,7 +35,7 @@ def batch_convert2float(images):
 class CycleGAN:
 
 
-    def __init__(self, name, img_size=None, ngf=32, ndf=32, input_ch=3, lambda_a=5, lambda_b=5):
+    def __init__(self, name, img_size=None, ngf=32, ndf=32, input_ch=3, lambda_a=5, lambda_b=5, d_num_layers):
         criterion_gan = mae
 
         self.a_real = tf.placeholder(tf.float32,
@@ -58,8 +58,8 @@ class CycleGAN:
         self.fake_A = GB(self.b_real)
         rec_B = GA(self.fake_A)
 
-        DA = Discriminator(ndf, name='D_A')
-        DB = Discriminator(ndf, name='D_B')
+        DA = Discriminator(ndf, name='D_A', d_num_layers)
+        DB = Discriminator(ndf, name='D_B', d_num_layers)
 
         #Discriminators
         DA_fake = DA(self.fake_A)
@@ -105,13 +105,13 @@ class CycleGAN:
         self.DA = DA
         self.DB = DB
 
-        tf.summary.image('A/original', batch_convert2int(self.a_real))
-        tf.summary.image('A/generated', batch_convert2int(self.fake_B))
-        tf.summary.image('A/reconstruction', batch_convert2int(rec_A))
+        tf.summary.image('%s-A/original' % name, batch_convert2int(self.a_real))
+        tf.summary.image('%s-A/generated' % name, batch_convert2int(self.fake_B))
+        tf.summary.image('%s-A/reconstruction' % name, batch_convert2int(rec_A))
 
-        tf.summary.image('B/original', batch_convert2int(self.b_real))
-        tf.summary.image('B/generated', batch_convert2int(self.fake_A))
-        tf.summary.image('B/reconstruction', batch_convert2int(rec_B))
+        tf.summary.image('%s-B/original' % name, batch_convert2int(self.b_real))
+        tf.summary.image('%s-B/generated' % name, batch_convert2int(self.fake_A))
+        tf.summary.image('%s-B/reconstruction' % name, batch_convert2int(rec_B))
 
 
     def get_losses(self):

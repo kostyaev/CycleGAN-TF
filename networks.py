@@ -48,13 +48,15 @@ class Discriminator:
                 assert tf.get_variable_scope().reuse == False
 
             x = slim.conv2d(image, self.ndf, ks, stride=2, padding=padding, activation_fn=lrelu)
-            mult = 1
-            for i in range(self.num_layers):
-                mult *= 2
-                x = slim.conv2d(x, self.ndf * mult, ks, stride=2, padding=padding, activation_fn=None)
+            mult = 2
+            for i in range(1, self.num_layers + 1):
+                stride = 2 if i % 2 == 1 else 0
+                x = slim.conv2d(x, self.ndf * mult, ks, stride=stride, padding=padding, activation_fn=None)
                 x = instance_norm(x)
                 x = lrelu(x)
-            mult *= 2
+                mult *= stride
+                mult = min(2, 8)
+
             x = slim.conv2d(x, self.ndf * mult, ks, stride=1, padding=padding, activation_fn=None)
             x = instance_norm(x)
             x = lrelu(x)

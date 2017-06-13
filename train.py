@@ -28,6 +28,7 @@ parser.add_argument("--scale_size", type=int, default=286, help="scale images to
 parser.add_argument("--crop_size", type=int, default=256, help="crop size")
 parser.add_argument("--batch_size", type=int, default=1, help='training batch size')
 parser.add_argument("--save_freq", type=int, default=6000, help='Save checkpoint frequency')
+parser.add_argument("--d_num_layers", type=int, default=5, help='Number of layers in discriminator')
 
 
 args = parser.parse_args()
@@ -47,7 +48,7 @@ def random_subset(f_list, min_len=0, max_len=1):
 
 
 def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='snapshots/', tensorboard_dir='tensorboard'):
-    model = CycleGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ngf=args.ngf, ndf=args.ndf)
+    model = CycleGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ngf=args.ngf, ndf=args.ndf, d_num_layers=args.d_num_layers)
     g_loss, da_loss, db_loss = model.get_losses()
 
     summary_op = tf.summary.merge_all()
@@ -69,7 +70,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     mirror_f = lambda x: compose(*random_subset([mirror], min_len=0, max_len=1))(x)
     crop_f = functools.partial(crop, crop_size=args.crop_size, center=False)
-    resize_f = functools.partial(resize_aspect, min_px=args.crop_size, max_px=args.crop_size)
+    resize_f = functools.partial(resize_aspect_random, min_px=args.crop_size, max_px=args.scale_size)
 
     train_pipeline = compose(load_image, mirror_f, resize_f, crop_f, img2array, preprocess)
     generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=False), args.batch_size)

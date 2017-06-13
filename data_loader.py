@@ -44,6 +44,10 @@ def resize_aspect(img, min_px=128, max_px=128):
     img = img.resize(size, Image.BILINEAR)
     return img
 
+def resize_aspect_random(img, min_px=128, max_px=128):
+    px = randint(min_px, max_px)
+    return resize_aspect(img, px, px)
+
 
 def resize(img, min_px=256, max_px=286):
     w = randint(min_px, max_px)
