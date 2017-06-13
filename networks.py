@@ -36,6 +36,7 @@ class Discriminator:
         self.ndf = ndf
         self.name = name
         self.reuse = False
+        self.num_layers = num_layers
 
     def __call__(self, image):
         ks = 4
@@ -48,7 +49,7 @@ class Discriminator:
 
             x = slim.conv2d(image, self.ndf, ks, stride=2, padding=padding, activation_fn=lrelu)
             mult = 1
-            for i in range(num_layers):
+            for i in range(self.num_layers):
                 mult *= 2
                 x = slim.conv2d(x, self.ndf * mult, ks, stride=2, padding=padding, activation_fn=None)
                 x = instance_norm(x)
