@@ -7,6 +7,7 @@ import tensorflow as tf
 import time
 import argparse
 import os
+from image_pool import ImagePool
 
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.3
@@ -74,6 +75,9 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=False), args.batch_size)
     generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=False), args.batch_size)
 
+    image_pool = ImagePool(50)
+
+
     init = tf.global_variables_initializer()
     sess.run(init)
 
@@ -102,9 +106,12 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             input_real = {model.a_real: batchA, model.b_real: batchB}
             fakeA, fakeB = sess.run([model.fake_A, model.fake_B], input_real)
 
+            fake_a_sample, fake_b_sample = image_pool.query((fakeA, fakeB))
+
+
             _, lossG, lossDA, lossDB, summary = sess.run([optimizers, g_loss, da_loss, db_loss, summary_op],
                                                          {model.a_real: batchA, model.b_real: batchB,
-                                                          model.fake_a_sample: fakeA, model.fake_b_sample: fakeB, lr: curr_lr})
+                                                          model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
 
             writer.add_summary(summary, step)
             writer.flush()
@@ -123,7 +130,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
 if __name__ == '__main__':
     tf.reset_default_graph()
-    # tf.set_random_seed(args.seed)
+    tf.set_random_seed(args.seed)
 
     trainA = os.path.join(args.dataset, 'trainA') + '/*.jpg'
     trainB = os.path.join(args.dataset, 'trainB') + '/*.jpg'
