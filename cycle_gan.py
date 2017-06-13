@@ -35,7 +35,7 @@ def batch_convert2float(images):
 class CycleGAN:
 
 
-    def __init__(self, name, img_size=None, ngf=32, ndf=32, input_ch=3, lambda_a=5, lambda_b=5, d_num_layers):
+    def __init__(self, name, img_size=None, ngf=32, ndf=32, input_ch=3, lambda_a=5, lambda_b=5, d_num_layers=5):
         criterion_gan = mae
 
         self.a_real = tf.placeholder(tf.float32,
