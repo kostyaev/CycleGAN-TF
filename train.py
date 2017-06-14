@@ -1,12 +1,12 @@
-from cycle_gan import *
-from glob import glob
-from data_loader import *
-import functools
-import sys
-import tensorflow as tf
-import time
 import argparse
+import functools
 import os
+import sys
+import time
+from glob import glob
+
+from cycle_gan import *
+from data_loader import *
 from image_pool import ImagePool
 
 config = tf.ConfigProto()
@@ -20,7 +20,8 @@ parser.add_argument("--seed", default=0, type=int)
 parser.add_argument("--dataset", help="path to folder containing images")
 parser.add_argument("--checkpoint", default='checkpoints/', help="directory with checkpoint to resume training from or use for testing")
 parser.add_argument("--tensorboard", default='tensorboard/', help='tensorboard dir')
-parser.add_argument("--max_epochs", default=200, type=int, help="number of training epochs")
+parser.add_argument("--max_epochs", default=100, type=int, help="number of training epochs")
+parser.add_argument("--decay_after", default=50, type=int, help="number of epoch from which start to decay lr")
 
 parser.add_argument("--ngf", type=int, default=32, help="number of generator filters in first conv layer")
 parser.add_argument("--ndf", type=int, default=32, help="number of discriminator filters in first conv layer")
@@ -73,7 +74,13 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     crop_f = functools.partial(crop, crop_size=args.crop_size, center=False)
     resize_f = functools.partial(resize_aspect_random, min_px=args.crop_size, max_px=args.scale_size)
 
-    train_pipeline = compose(load_image, mirror_f, resize_f, crop_f, img2array, preprocess)
+    contrast_f = functools.partial(contrast, steps=[0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3]
+    brightness_f = functools.partial(brightness, steps=[0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
+    saturation_f = functools.partial(saturation, steps=[0.8, 0.9, 1.0, 1.1, 1.2])
+
+    color_jitter = lambda x: compose(*random_subset([contrast_f, brightness_f, saturation_f], min_len=0, max_len=3))(x)
+
+    train_pipeline = compose(load_image, mirror_f, resize_f, crop_f, color_jitter, img2array, preprocess)
     generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=True), args.batch_size)
     generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=True), args.batch_size)
 
@@ -93,11 +100,13 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
         step = 0
 
     for epoch in range(1, epochs+1):
-        log('starting epoch: %d' % epoch)
-        if epoch < 100:
+        if epoch < args.decay_after:
             curr_lr = start_lr
         else:
-            curr_lr = start_lr - start_lr*(epoch-100)/100
+            curr_lr = start_lr - start_lr*(epoch-args.decay_after)/args.decay_after
+
+        log('starting epoch %d, lr: %f' % (epoch, curr_lr))
+
 
         start_iter = time.time()
         for i in range(max(len(dataA), len(dataB))):
@@ -114,13 +123,13 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             ops = [optimizers, g_loss, da_loss, db_loss]
 
             if i % args.display_freq == 0:
-                 _, lossG, lossDA, lossDB, summary = sess.run(ops + [summary_op],
-                                                         {model.a_real: batchA, model.b_real: batchB,
-                                                          model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
+                _, lossG, lossDA, lossDB, summary = sess.run(ops + [summary_op],
+                                                             {model.a_real: batchA, model.b_real: batchB,
+                                                              model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
             else:
                 _, lossG, lossDA, lossDB = sess.run(ops,
                                                     {model.a_real: batchA, model.b_real: batchB,
-                                                    model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
+                                                     model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
 
             writer.add_summary(summary, step)
             writer.flush()
@@ -152,6 +161,6 @@ if __name__ == '__main__':
     with tf.Session() as sess:
         train(sess,
               data_dirs=[trainA, trainB],
-              epochs=200,
+              epochs=args.max_epochs,
               checkpoints_dir=checkpoints_dir,
               tensorboard_dir=tensorboard_dir)

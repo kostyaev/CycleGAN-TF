@@ -69,6 +69,29 @@ def crop(img, crop_size=128, center=False):
 def mirror(img):
     return img.transpose(Image.FLIP_LEFT_RIGHT)
 
+def contrast(img, steps=None):
+    if steps is None:
+        return img
+    idx = randint(0, len(steps) - 1)
+    enh = ImageEnhance.Contrast(img)
+    return enh.enhance(steps[idx])
+
+
+def brightness(img, steps=None):
+    if steps is None:
+        return img
+    idx = randint(0, len(steps) - 1)
+    enh = ImageEnhance.Brightness(img)
+    return enh.enhance(steps[idx])
+
+
+def saturation(img, steps=None):
+    if steps is None:
+        steps = [0]
+    idx = randint(0, len(steps) - 1)
+    enh = ImageEnhance.Color(img)
+    return enh.enhance(steps[idx])
+
 
 def image_generator(data, img_transform, shuffle=False):
     if shuffle:
