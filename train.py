@@ -7,7 +7,7 @@ from glob import glob
 import tensorflow as tf
 from power_gan import *
 from data_loader import *
-from image_pool import ImagePool
+from image_pool import ImagePool, BatchedImagePool
 
 
 
@@ -84,11 +84,11 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
 
 
-    fake_poolA = ImagePool(50)
-    fake_poolB = ImagePool(50)
+    fake_poolA = BatchedImagePool(100, batch_size=3)
+    fake_poolB = BatchedImagePool(100, batch_size=3)
 
-    # real_poolA = ImagePool(50)
-    # real_poolB = ImagePool(50)
+    real_poolA = BatchedImagePool(100, batch_size=3)
+    real_poolB = BatchedImagePool(100, batch_size=3)
 
 
     init = tf.global_variables_initializer()
@@ -126,6 +126,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             fakeA, fakeB = sess.run([model.fake_A, model.fake_B], input_real)
 
             fake_a_sample, fake_b_sample = fake_poolA.query(fakeA), fake_poolB.query(fakeB)
+            real_a_sample, real_b_sample = real_poolA.query(batchA), real_poolB.query(batchB)
 
             ops = [optimizers, g_loss, da_loss, db_loss]
 
@@ -136,7 +137,9 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             else:
                 _, lossG, lossDA, lossDB = sess.run(ops,
                                                     {model.a_real: batchA, model.b_real: batchB,
-                                                     model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
+                                                     model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample,
+                                                     model.real_a_sample: real_a_sample, model.real_b_sample: real_b_sample,
+                                                     lr: curr_lr})
 
             writer.add_summary(summary, step)
             writer.flush()

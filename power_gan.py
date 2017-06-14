@@ -49,6 +49,14 @@ class PowerGAN:
         self.fake_b_sample = tf.placeholder(tf.float32,
                                          [None, img_size, img_size, input_ch], name='fake_B_sample')
 
+
+
+        self.real_a_sample = tf.placeholder(tf.float32,
+                                       [None, img_size, img_size, input_ch], name='real_A_sample')
+
+        self.real_b_sample = tf.placeholder(tf.float32,
+                                         [None, img_size, img_size, input_ch], name='real_B_sample')
+
         G = PowerGenerator(ngf, name='G')
 
         # Generators
@@ -75,8 +83,8 @@ class PowerGAN:
         self.g_loss = criterion_gan(DB_fake, 0.9) + criterion_gan(DA_fake, 0.9) + recon_loss
 
 
-        DA_real = DA(self.a_real) ## TODO take sample too
-        DB_real = DB(self.b_real)
+        DA_real = DA(self.real_a_sample)
+        DB_real = DB(self.real_b_sample)
         DA_fake_sample = DA(self.fake_a_sample)
         DB_fake_sample = DB(self.fake_b_sample)
 
