@@ -5,8 +5,6 @@ import sys
 import time
 from glob import glob
 import tensorflow as tf
-config = tf.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.3
 from power_gan import *
 from data_loader import *
 from image_pool import ImagePool
@@ -167,8 +165,9 @@ if __name__ == '__main__':
 
     print trainA, trainB
 
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.4)
-    with tf.Session(gpu_options) as sess:
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.3
+    with tf.Session(config=config) as sess:
         train(sess,
               data_dirs=[trainA, trainB],
               epochs=args.max_epochs,
