@@ -74,7 +74,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     crop_f = functools.partial(crop, crop_size=args.crop_size, center=False)
     resize_f = functools.partial(resize_aspect_random, min_px=args.crop_size, max_px=args.scale_size)
 
-    contrast_f = functools.partial(contrast, steps=[0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3]
+    contrast_f = functools.partial(contrast, steps=[0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     brightness_f = functools.partial(brightness, steps=[0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     saturation_f = functools.partial(saturation, steps=[0.8, 0.9, 1.0, 1.1, 1.2])
 
