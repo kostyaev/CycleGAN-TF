@@ -32,7 +32,7 @@ def batch_convert2float(images):
   """
   return tf.map_fn(convert2float, images, dtype=tf.float32)
 
-class CycleGAN:
+class PowerGAN:
 
 
     def __init__(self, name, img_size=None, ngf=32, ndf=32, input_ch=3, lambda_a=5, lambda_b=5, d_num_layers=5):

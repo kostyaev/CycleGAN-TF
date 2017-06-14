@@ -7,7 +7,7 @@ from glob import glob
 import tensorflow as tf
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.3
-from cycle_gan import *
+from power_gan import *
 from data_loader import *
 from image_pool import ImagePool
 
@@ -50,7 +50,7 @@ def random_subset(f_list, min_len=0, max_len=1):
 
 
 def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='snapshots/', tensorboard_dir='tensorboard'):
-    model = CycleGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ngf=args.ngf, ndf=args.ndf, d_num_layers=args.d_num_layers)
+    model = PowerGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ngf=args.ngf, ndf=args.ndf, d_num_layers=args.d_num_layers)
     g_loss, da_loss, db_loss = model.get_losses()
 
     summary_op = tf.summary.merge_all()
