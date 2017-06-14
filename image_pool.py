@@ -45,4 +45,4 @@ class BatchedImagePool:
             self.pool_images.append(image)
             return image
         else:
-            return get_random_with_replace(image)
+            return self.get_random_with_replace(image)
