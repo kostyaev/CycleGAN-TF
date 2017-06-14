@@ -4,13 +4,13 @@ import os
 import sys
 import time
 from glob import glob
-
+import tensorflow as tf
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.3
 from cycle_gan import *
 from data_loader import *
 from image_pool import ImagePool
 
-config = tf.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.3
 
 
 parser = argparse.ArgumentParser()
