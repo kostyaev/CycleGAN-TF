@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 import math
-
+from PIL import ImageEnhance, ImageFilter, Image
 
 def img2array(img):
     a = np.array(img)
