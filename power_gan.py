@@ -75,7 +75,7 @@ class PowerGAN:
         self.g_loss = criterion_gan(DB_fake, 0.9) + criterion_gan(DA_fake, 0.9) + recon_loss
 
 
-        DA_real = DA(self.a_real)
+        DA_real = DA(self.a_real) ## TODO take sample too
         DB_real = DB(self.b_real)
         DA_fake_sample = DA(self.fake_a_sample)
         DB_fake_sample = DB(self.fake_b_sample)

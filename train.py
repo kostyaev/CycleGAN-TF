@@ -84,8 +84,13 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=True), args.batch_size)
     generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=True), args.batch_size)
 
-    poolA = ImagePool(50)
-    poolB = ImagePool(50)
+
+
+    fake_poolA = ImagePool(50)
+    fake_poolB = ImagePool(50)
+
+    # real_poolA = ImagePool(50)
+    # real_poolB = ImagePool(50)
 
 
     init = tf.global_variables_initializer()
@@ -99,7 +104,11 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     else:
         step = 0
 
-    for epoch in range(1, epochs+1):
+    iters_per_epoch = max(len(dataA), len(dataB))
+    last_epoch = step / iters_per_epoch
+
+
+    for epoch in range(last_epoch, epochs+1):
         if epoch < args.decay_after:
             curr_lr = start_lr
         else:
@@ -109,7 +118,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
 
         start_iter = time.time()
-        for i in range(max(len(dataA), len(dataB))):
+        for i in range(iters_per_epoch):
             step += 1
 
             batchA = generatorA.next()
@@ -118,7 +127,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             input_real = {model.a_real: batchA, model.b_real: batchB}
             fakeA, fakeB = sess.run([model.fake_A, model.fake_B], input_real)
 
-            fake_a_sample, fake_b_sample = poolA.query(fakeA), poolB.query(fakeB)
+            fake_a_sample, fake_b_sample = fake_poolA.query(fakeA), fake_poolB.query(fakeB)
+            # real_a_sample, real_b_sample = real_poolA.query(batchA), real_poolB.query(batchB)
 
             ops = [optimizers, g_loss, da_loss, db_loss]
 
