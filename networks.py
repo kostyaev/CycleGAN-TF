@@ -1,6 +1,37 @@
 from ops import *
 
 
+class PowerGenerator:
+    def __init__(self, ngf, ks=3, name='generator'):
+        self.name = name
+        self.ks = ks
+        self.ngf = ngf
+        self.reuse = False
+
+    def __call__(self, image):
+        with tf.variable_scope(self.name):
+            if self.reuse:
+                tf.get_variable_scope().reuse_variables()
+            else:
+                assert tf.get_variable_scope().reuse == False
+
+            x = tf.pad(image, [[0, 0], [2, 2], [2, 2], [0, 0]], "REFLECT")
+            x = conv2d(x, self.ngf, 5, 1, padding='VALID', name='g_c1')
+            x = conv2d(x, self.ngf * 2, 3, 2, name='g_c2')
+            x = conv2d(x, self.ngf * 4, 3, 2, name='g_c3')
+            for i in range(4):
+                x = res_block(x, self.ngf * 4, name='res%d_' % i)
+            x = conv2d_transpose(x, self.ngf * 2, 3, 2, name='g_ct1')
+            x = conv2d_transpose(x, self.ngf, 3, 2, name='g_ct2')
+            x = tf.pad(x, [[0, 0], [2, 2], [2, 2], [0, 0]], "REFLECT")
+            x = conv2d_simple(x, 3*2, 5, 1, padding='VALID', activation_fn=tf.nn.tanh, name='out')
+
+        self.reuse = True
+        self.variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
+        return x
+
+
+
 class Generator:
     def __init__(self, ngf, ks=3, name='generator'):
         self.name = name

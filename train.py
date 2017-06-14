@@ -80,7 +80,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     color_jitter = lambda x: compose(*random_subset([contrast_f, brightness_f, saturation_f], min_len=0, max_len=3))(x)
 
-    train_pipeline = compose(load_image, mirror_f, resize_f, crop_f, color_jitter, img2array, preprocess)
+    train_pipeline = compose(load_image, mirror_f, resize_f, crop_f, img2array, preprocess)
     generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=True), args.batch_size)
     generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=True), args.batch_size)
 
