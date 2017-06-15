@@ -144,7 +144,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             # Train background reconstruction
             if step % 5 == 0:
                 batchC = generatorC.next()
-                _, recLoss = sess.run([rec_optim, rec_loss], {model.a_real: batchC, model.b_real: batchC, lr: curr_lr})
+                if batchC.shape[-1] == 3:
+                    _, recLoss = sess.run([rec_optim, rec_loss], {model.a_real: batchC, model.b_real: batchC, lr: curr_lr})
 
 
             writer.add_summary(summary, step)
