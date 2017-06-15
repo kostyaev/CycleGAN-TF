@@ -108,6 +108,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     iters_per_epoch = max(len(dataA), len(dataB))
     last_epoch = step / iters_per_epoch + 1
 
+    lossRec = 0.0
 
     for epoch in range(last_epoch, epochs+1):
         if epoch < args.decay_after:
@@ -145,7 +146,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             if step % 5 == 0:
                 batchC = generatorC.next()
                 if batchC.shape[-1] == 3:
-                    _, recLoss = sess.run([rec_optim, rec_loss], {model.a_real: batchC, model.b_real: batchC, lr: curr_lr})
+                    _, lossRec = sess.run([rec_optim, rec_loss], {model.a_real: batchC, model.b_real: batchC, lr: curr_lr})
 
 
             writer.add_summary(summary, step)
