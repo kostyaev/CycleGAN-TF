@@ -32,7 +32,7 @@ def batch_convert2float(images):
   """
   return tf.map_fn(convert2float, images, dtype=tf.float32)
 
-class PowerGAN:
+class PowerDGAN:
 
 
     def __init__(self, name, img_size=None, ngf=32, ndf=32, input_ch=3, lambda_a=5, lambda_b=5, d_num_layers=5):
@@ -62,17 +62,23 @@ class PowerGAN:
         rec_B = self.fakeA_B[:, :, :, 3:]
 
 
-        DA = Discriminator(ndf, name='D_A', num_layers=d_num_layers)
-        DB = Discriminator(ndf, name='D_B', num_layers=d_num_layers)
+        D = PowerDiscriminator(ndf, name='D', num_layers=d_num_layers)
 
         #Discriminators
-        DA_fake = DA(self.fake_A)
-        DB_fake = DB(self.fake_B)
+        DA_fake = D(self.fake_A)
+        DB_fake = D(self.fake_B)
+
+        # is_real, is_makeup
+        true_B = [1,1]
+        true_A = [1,0]
+
+        fake_B = [0,1]
+        fake_A = [0,0]
 
 
         # Generator Losses
         recon_loss = lambda_a * abs_criterion(self.a_real, rec_A) + lambda_b * abs_criterion(self.b_real, rec_B)
-        self.g_loss = criterion_gan(DB_fake, 0.9) + criterion_gan(DA_fake, 0.9) + recon_loss
+        self.g_loss = criterion_gan(DB_fake, true_B) + criterion_gan(DA_fake, true_A) + recon_loss
 
 
         DA_real = DA(self.a_real) ## TODO take sample too
@@ -82,14 +88,15 @@ class PowerGAN:
 
 
         # Discriminator Losses
-        da_loss_real = criterion_gan(DA_real, 0.9)
-        da_loss_fake = criterion_gan(DA_fake_sample, 0)
+        da_loss_real = criterion_gan(DA_real, true_A)
+        da_loss_fake = criterion_gan(DA_fake_sample, fake_A)
         self.da_loss = (da_loss_real + da_loss_fake) * 0.5
 
-        db_loss_real = criterion_gan(DB_real, 0.9)
-        db_loss_fake = criterion_gan(DB_fake_sample, 0)
+        db_loss_real = criterion_gan(DB_real, true_B)
+        db_loss_fake = criterion_gan(DB_fake_sample, fake_B)
         self.db_loss = (db_loss_real + db_loss_fake) * 0.5
 
+        self.d_loss = (self.da_loss + self.db_loss) * 0.5
 
         self.g_loss_sum = tf.summary.scalar('G/loss', self.g_loss)
 
@@ -105,8 +112,7 @@ class PowerGAN:
         self.db_sum = tf.summary.merge([self.db_loss_sum, db_loss_real_sum, db_loss_fake_sum])
 
         self.G = G
-        self.DA = DA
-        self.DB = DB
+        self.D = D
 
         tf.summary.image('%s-A/original' % name, batch_convert2int(self.a_real))
         tf.summary.image('%s-A/generated' % name, batch_convert2int(self.fake_B))
@@ -118,7 +124,7 @@ class PowerGAN:
 
 
     def get_losses(self):
-        return self.g_loss, self.da_loss, self.db_loss
+        return self.g_loss, self.d_loss
 
 
 

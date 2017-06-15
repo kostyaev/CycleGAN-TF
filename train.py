@@ -5,7 +5,7 @@ import sys
 import time
 from glob import glob
 import tensorflow as tf
-from power_gan import *
+from power_dgan import *
 from data_loader import *
 from image_pool import ImagePool, BatchedImagePool
 
@@ -22,7 +22,7 @@ parser.add_argument("--max_epochs", default=100, type=int, help="number of train
 parser.add_argument("--decay_after", default=50, type=int, help="number of epoch from which start to decay lr")
 
 parser.add_argument("--ngf", type=int, default=32, help="number of generator filters in first conv layer")
-parser.add_argument("--ndf", type=int, default=32, help="number of discriminator filters in first conv layer")
+parser.add_argument("--ndf", type=int, default=64, help="number of discriminator filters in first conv layer")
 parser.add_argument("--scale_size", type=int, default=286, help="scale images to this size before cropping")
 parser.add_argument("--crop_size", type=int, default=256, help="crop size")
 parser.add_argument("--batch_size", type=int, default=1, help='training batch size')
@@ -48,8 +48,8 @@ def random_subset(f_list, min_len=0, max_len=1):
 
 
 def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='snapshots/', tensorboard_dir='tensorboard'):
-    model = PowerGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ngf=args.ngf, ndf=args.ndf, d_num_layers=args.d_num_layers)
-    g_loss, da_loss, db_loss = model.get_losses()
+    model = PowerDGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ngf=args.ngf, ndf=args.ndf, d_num_layers=args.d_num_layers)
+    g_loss, d_loss = model.get_losses()
 
     summary_op = tf.summary.merge_all()
     writer = tf.summary.FileWriter(tensorboard_dir, sess.graph)
@@ -58,8 +58,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     lr = tf.placeholder(tf.float32, shape=[], name="lr")
 
-    da_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(da_loss, var_list=model.DA.variables)
-    db_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(db_loss, var_list=model.DB.variables)
+    d_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(d_loss, var_list=model.D.variables)
     g_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(g_loss, var_list=[model.G.variables])
 
     with tf.control_dependencies([g_optim, da_optim, db_optim]):

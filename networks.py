@@ -61,7 +61,7 @@ class PowerDiscriminator:
             x = slim.conv2d(x, self.ndf * mult, ks, stride=1, padding=padding, activation_fn=None)
             x = instance_norm(x)
             x = lrelu(x)
-            x = conv2d_simple(x, 4, ks, stride=1, padding=padding, activation_fn=None, name='out')
+            x = conv2d_simple(x, 2, ks, stride=1, padding=padding, activation_fn=None, name='out')
 
         self.reuse = True
         self.variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
