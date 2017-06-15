@@ -31,6 +31,43 @@ class PowerGenerator:
         return x
 
 
+class PowerDiscriminator:
+    def __init__(self, ndf, name='discriminator', num_layers=3):
+        self.ndf = ndf
+        self.name = name
+        self.reuse = False
+        self.num_layers = num_layers
+
+    def __call__(self, image):
+        ks = 4
+        padding = 'SAME'
+        with tf.variable_scope(self.name):
+            if self.reuse:
+                tf.get_variable_scope().reuse_variables()
+            else:
+                assert tf.get_variable_scope().reuse == False
+
+            x = slim.conv2d(image, self.ndf, ks, stride=2, padding=padding, activation_fn=lrelu)
+            mult = 2
+            for i in range(1, self.num_layers + 1):
+                # stride = 2 if i % 2 == 1 else 1
+                stride = 2
+                x = slim.conv2d(x, self.ndf * mult, ks, stride=stride, padding=padding, activation_fn=None)
+                x = instance_norm(x)
+                x = lrelu(x)
+                mult *= stride
+                mult = min(mult, 8)
+
+            x = slim.conv2d(x, self.ndf * mult, ks, stride=1, padding=padding, activation_fn=None)
+            x = instance_norm(x)
+            x = lrelu(x)
+            x = conv2d_simple(x, 4, ks, stride=1, padding=padding, activation_fn=None, name='out')
+
+        self.reuse = True
+        self.variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
+        return x
+
+
 
 class Generator:
     def __init__(self, ngf, ks=3, name='generator'):
@@ -92,7 +129,7 @@ class Discriminator:
             x = slim.conv2d(x, self.ndf * mult, ks, stride=1, padding=padding, activation_fn=None)
             x = instance_norm(x)
             x = lrelu(x)
-            x = conv2d_simple(x, self.ndf * mult, ks, stride=1, padding=padding, activation_fn=None, name='out')
+            x = conv2d_simple(x, 1, ks, stride=1, padding=padding, activation_fn=None, name='out')
 
         self.reuse = True
         self.variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)

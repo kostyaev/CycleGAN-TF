@@ -23,7 +23,7 @@ parser.add_argument("--decay_after", default=50, type=int, help="number of epoch
 
 parser.add_argument("--ngf", type=int, default=32, help="number of generator filters in first conv layer")
 parser.add_argument("--ndf", type=int, default=32, help="number of discriminator filters in first conv layer")
-parser.add_argument("--scale_size", type=int, default=286, help="scale images to this size before cropping to 256x256")
+parser.add_argument("--scale_size", type=int, default=286, help="scale images to this size before cropping")
 parser.add_argument("--crop_size", type=int, default=256, help="crop size")
 parser.add_argument("--batch_size", type=int, default=1, help='training batch size')
 parser.add_argument("--save_freq", type=int, default=6000, help='Save checkpoint frequency')
@@ -83,12 +83,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=True), args.batch_size)
 
 
-
-    fake_poolA = BatchedImagePool(100, batch_size=3)
-    fake_poolB = BatchedImagePool(100, batch_size=3)
-
-    real_poolA = BatchedImagePool(100, batch_size=3)
-    real_poolB = BatchedImagePool(100, batch_size=3)
+    fake_poolA = ImagePool(50)
+    fake_poolB = ImagePool(50)
 
 
     init = tf.global_variables_initializer()
@@ -134,13 +130,11 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
                 _, lossG, lossDA, lossDB, summary = sess.run(ops + [summary_op],
                                                              {model.a_real: batchA, model.b_real: batchB,
                                                               model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample,
-                                                              model.real_a_sample: real_a_sample, model.real_b_sample: real_b_sample,
                                                               lr: curr_lr})
             else:
                 _, lossG, lossDA, lossDB = sess.run(ops,
                                                     {model.a_real: batchA, model.b_real: batchB,
                                                      model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample,
-                                                     model.real_a_sample: real_a_sample, model.real_b_sample: real_b_sample,
                                                      lr: curr_lr})
 
             writer.add_summary(summary, step)
