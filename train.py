@@ -121,7 +121,6 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             fakeA, fakeB = sess.run([model.fake_A, model.fake_B], input_real)
 
             fake_a_sample, fake_b_sample = fake_poolA.query(fakeA), fake_poolB.query(fakeB)
-            real_a_sample, real_b_sample = real_poolA.query(batchA), real_poolB.query(batchB)
 
             ops = [optimizers, g_loss, d_loss]
 
