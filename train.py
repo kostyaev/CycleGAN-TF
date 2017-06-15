@@ -123,15 +123,15 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             fake_a_sample, fake_b_sample = fake_poolA.query(fakeA), fake_poolB.query(fakeB)
             real_a_sample, real_b_sample = real_poolA.query(batchA), real_poolB.query(batchB)
 
-            ops = [optimizers, g_loss, da_loss, db_loss]
+            ops = [optimizers, g_loss, d_loss]
 
             if i % args.display_freq == 0:
-                _, lossG, lossDA, lossDB, summary = sess.run(ops + [summary_op],
+                _, lossG, lossD, summary = sess.run(ops + [summary_op],
                                                              {model.a_real: batchA, model.b_real: batchB,
                                                               model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample,
                                                               lr: curr_lr})
             else:
-                _, lossG, lossDA, lossDB = sess.run(ops,
+                _, lossG, lossD = sess.run(ops,
                                                     {model.a_real: batchA, model.b_real: batchB,
                                                      model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample,
                                                      lr: curr_lr})
@@ -141,7 +141,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
             if step % 50 == 0:
                 end_iter = time.time()
-                log('Step %d: G_loss: %.3f, DA_loss: %.3f, DB_loss: %.3f, time: %.3fs' % (step, lossG, lossDA, lossDB, end_iter - start_iter))
+                log('Step %d: G_loss: %.3f, D_loss: %.3f, time: %.3fs' % (step, lossG, lossD, end_iter - start_iter))
                 start_iter = time.time()
 
             if step % args.save_freq == 0:
