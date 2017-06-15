@@ -81,10 +81,10 @@ class PowerDGAN:
         self.g_loss = criterion_gan(DB_fake, true_B) + criterion_gan(DA_fake, true_A) + recon_loss
 
 
-        DA_real = DA(self.a_real) ## TODO take sample too
-        DB_real = DB(self.b_real)
-        DA_fake_sample = DA(self.fake_a_sample)
-        DB_fake_sample = DB(self.fake_b_sample)
+        DA_real = D(self.a_real) ## TODO take sample too
+        DB_real = D(self.b_real)
+        DA_fake_sample = D(self.fake_a_sample)
+        DB_fake_sample = D(self.fake_b_sample)
 
 
         # Discriminator Losses
