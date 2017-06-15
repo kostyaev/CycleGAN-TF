@@ -154,7 +154,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
             if step % 50 == 0:
                 end_iter = time.time()
-                log('Step %d: G_loss: %.3f, Rec_loss: %.3f, D_loss: %.3f, time: %.3fs' % (step, lossG, lossRec, lossD, end_iter - start_iter))
+                log('Step %d: G_loss: %.3f, Rec_loss: %.3f, DA_loss: %.3f, DB_loss: %.3f, time: %.3fs' % (step, lossG, lossRec, lossDA, lossDB, end_iter - start_iter))
                 start_iter = time.time()
 
             if step % args.save_freq == 0:
