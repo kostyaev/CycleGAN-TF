@@ -64,7 +64,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     g_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(g_loss, var_list=[model.GA.variables + model.GB.variables])
     rec_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(rec_loss, var_list=[model.GA.variables + model.GB.variables])
 
-    with tf.control_dependencies([g_optim, d_optim]):
+    with tf.control_dependencies([g_optim, da_optim, db_optim]):
         optimizers = tf.no_op(name='optimizers')
 
     dataA = glob(data_dirs[0])
