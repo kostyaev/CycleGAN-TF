@@ -71,7 +71,7 @@ class CycleGAN:
         self.g_loss = criterion_gan(DB_fake, 0.9) + criterion_gan(DA_fake, 0.9) + cycle_loss
 
         #Reconstruction loss for background consistency
-        self.rec_loss = lambda_a * abs_criterion(self.a_real, self.fake_B) + lambda_b * abs_criterion(self.a_real, self.fake_A)
+        self.rec_loss = lambda_a * abs_criterion(self.a_real, self.fake_B) + lambda_b * abs_criterion(self.b_real, self.fake_A)
 
 
         DA_real = DA(self.a_real)
