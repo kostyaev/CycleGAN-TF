@@ -5,7 +5,7 @@ import sys
 import time
 from glob import glob
 import tensorflow as tf
-from power_dgan import *
+from cycle_gan import *
 from data_loader import *
 from image_pool import ImagePool, BatchedImagePool
 
@@ -22,12 +22,12 @@ parser.add_argument("--max_epochs", default=100, type=int, help="number of train
 parser.add_argument("--decay_after", default=50, type=int, help="number of epoch from which start to decay lr")
 
 parser.add_argument("--ngf", type=int, default=32, help="number of generator filters in first conv layer")
-parser.add_argument("--ndf", type=int, default=64, help="number of discriminator filters in first conv layer")
+parser.add_argument("--ndf", type=int, default=32, help="number of discriminator filters in first conv layer")
 parser.add_argument("--scale_size", type=int, default=286, help="scale images to this size before cropping")
 parser.add_argument("--crop_size", type=int, default=256, help="crop size")
 parser.add_argument("--batch_size", type=int, default=1, help='training batch size')
 parser.add_argument("--save_freq", type=int, default=6000, help='Save checkpoint frequency')
-parser.add_argument("--d_num_layers", type=int, default=5, help='Number of layers in discriminator')
+parser.add_argument("--d_num_layers", type=int, default=3, help='Number of layers in discriminator')
 parser.add_argument("--display_freq", type=int, default=1000, help='Update tensorboard frequency')
 
 
@@ -48,8 +48,9 @@ def random_subset(f_list, min_len=0, max_len=1):
 
 
 def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='snapshots/', tensorboard_dir='tensorboard'):
-    model = PowerDGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ngf=args.ngf, ndf=args.ndf, d_num_layers=args.d_num_layers)
+    model = CycleGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ngf=args.ngf, ndf=args.ndf, d_num_layers=args.d_num_layers)
     g_loss, d_loss = model.get_losses()
+    rec_loss = model.rec_loss
 
     summary_op = tf.summary.merge_all()
     writer = tf.summary.FileWriter(tensorboard_dir, sess.graph)
@@ -58,14 +59,19 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     lr = tf.placeholder(tf.float32, shape=[], name="lr")
 
-    d_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(d_loss, var_list=model.D.variables)
+    da_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(da_loss, var_list=model.DA.variables)
+    db_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(db_loss, var_list=model.DB.variables)
     g_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(g_loss, var_list=[model.G.variables])
+    rec_optim = tf.train.AdamOptimizer(learning_rate=lr, beta1=beta1).minimize(rec_loss, var_list=[model.G.variables])
 
     with tf.control_dependencies([g_optim, d_optim]):
         optimizers = tf.no_op(name='optimizers')
 
     dataA = glob(data_dirs[0])
     dataB = glob(data_dirs[1])
+    dataC = glob(data_dirs[2])
+
+    print 'DataA: %d, DataB: %d, DataC: %d' % (dataA, dataB, dataC)
 
     mirror_f = lambda x: compose(*random_subset([mirror], min_len=0, max_len=1))(x)
     crop_f = functools.partial(crop, crop_size=args.crop_size, center=False)
@@ -78,8 +84,10 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     color_jitter = lambda x: compose(*random_subset([contrast_f, brightness_f, saturation_f], min_len=0, max_len=3))(x)
 
     train_pipeline = compose(load_image, mirror_f, resize_f, crop_f, img2array, preprocess)
+
     generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=True), args.batch_size)
     generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=True), args.batch_size)
+    generatorC = batch_generator(lambda: image_generator(dataC, train_pipeline, shuffle=True), args.batch_size)
 
 
     fake_poolA = ImagePool(50)
@@ -98,7 +106,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
         step = 0
 
     iters_per_epoch = max(len(dataA), len(dataB))
-    last_epoch = step / iters_per_epoch
+    last_epoch = step / iters_per_epoch + 1
 
 
     for epoch in range(last_epoch, epochs+1):
@@ -122,25 +130,29 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
             fake_a_sample, fake_b_sample = fake_poolA.query(fakeA), fake_poolB.query(fakeB)
 
-            ops = [optimizers, g_loss, d_loss]
+            ops = [optimizers, g_loss, da_loss, db_loss]
 
             if i % args.display_freq == 0:
-                _, lossG, lossD, summary = sess.run(ops + [summary_op],
+                _, lossG, lossDA, lossDB, summary = sess.run(ops + [summary_op],
                                                              {model.a_real: batchA, model.b_real: batchB,
-                                                              model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample,
-                                                              lr: curr_lr})
+                                                              model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
             else:
-                _, lossG, lossD = sess.run(ops,
+                _, lossG, lossDA, lossDB = sess.run(ops,
                                                     {model.a_real: batchA, model.b_real: batchB,
-                                                     model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample,
-                                                     lr: curr_lr})
+                                                     model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
+
+            # Train background reconstruction
+            if step % 5 == 0:
+                batchC = generatorC.next()
+                _, recLoss = sess.run([rec_optim, rec_loss], {model.a_real: batchC, lr: curr_lr})
+
 
             writer.add_summary(summary, step)
             writer.flush()
 
             if step % 50 == 0:
                 end_iter = time.time()
-                log('Step %d: G_loss: %.3f, D_loss: %.3f, time: %.3fs' % (step, lossG, lossD, end_iter - start_iter))
+                log('Step %d: G_loss: %.3f, Rec_loss: %.3f, D_loss: %.3f, time: %.3fs' % (step, lossG, lossRec, lossD, end_iter - start_iter))
                 start_iter = time.time()
 
             if step % args.save_freq == 0:
@@ -156,17 +168,18 @@ if __name__ == '__main__':
 
     trainA = os.path.join(args.dataset, 'trainA') + '/*.jpg'
     trainB = os.path.join(args.dataset, 'trainB') + '/*.jpg'
+    trainC = '/root/storage/playbooks/data/image-turk/backgrounds/*.JPEG'
 
     tensorboard_dir = os.path.join(args.tensorboard, args.name)
     checkpoints_dir = os.path.join(args.checkpoint, args.name)
 
-    print trainA, trainB
+    print trainA, trainB, trainC
 
     config = tf.ConfigProto()
     config.gpu_options.per_process_gpu_memory_fraction = 0.3
     with tf.Session(config=config) as sess:
         train(sess,
-              data_dirs=[trainA, trainB],
+              data_dirs=[trainA, trainB, trainC],
               epochs=args.max_epochs,
               checkpoints_dir=checkpoints_dir,
               tensorboard_dir=tensorboard_dir)

@@ -52,7 +52,7 @@ class CycleGAN:
         GA = Generator(ngf, name='G_A')
         GB = Generator(ngf, name='G_B')
 
-        # Generators
+        #Generators
         self.fake_B = GA(self.a_real)
         rec_A = GB(self.fake_B)
         self.fake_A = GB(self.b_real)
@@ -66,9 +66,12 @@ class CycleGAN:
         DB_fake = DB(self.fake_B)
 
 
-        # Generator Losses
-        recon_loss = lambda_a * abs_criterion(self.a_real, rec_A) + lambda_b * abs_criterion(self.b_real, rec_B)
-        self.g_loss = criterion_gan(DB_fake, 0.9) + criterion_gan(DA_fake, 0.9) + recon_loss
+        #Generator Losses
+        cycle_loss = lambda_a * abs_criterion(self.a_real, rec_A) + lambda_b * abs_criterion(self.b_real, rec_B)
+        self.g_loss = criterion_gan(DB_fake, 0.9) + criterion_gan(DA_fake, 0.9) + cycle_loss
+
+        #Reconstruction loss for background consistency
+        self.rec_loss = lambda_a * abs_criterion(self.a_real, self.fake_B) + lambda_b * abs_criterion(self.a_real, self.fake_A)
 
 
         DA_real = DA(self.a_real)
@@ -105,13 +108,13 @@ class CycleGAN:
         self.DA = DA
         self.DB = DB
 
-        tf.summary.image('%s-A/original' % name, batch_convert2int(self.a_real))
-        tf.summary.image('%s-A/generated' % name, batch_convert2int(self.fake_B))
-        tf.summary.image('%s-A/reconstruction' % name, batch_convert2int(rec_A))
+        tf.summary.image('%s-A/original' % name, batch_convert2int(self.a_real), max_outputs=1)
+        tf.summary.image('%s-A/generated' % name, batch_convert2int(self.fake_B), max_outputs=1)
+        tf.summary.image('%s-A/reconstruction' % name, batch_convert2int(rec_A), max_outputs=1)
 
-        tf.summary.image('%s-B/original' % name, batch_convert2int(self.b_real))
-        tf.summary.image('%s-B/generated' % name, batch_convert2int(self.fake_A))
-        tf.summary.image('%s-B/reconstruction' % name, batch_convert2int(rec_B))
+        tf.summary.image('%s-B/original' % name, batch_convert2int(self.b_real), max_outputs=1)
+        tf.summary.image('%s-B/generated' % name, batch_convert2int(self.fake_A), max_outputs=1)
+        tf.summary.image('%s-B/reconstruction' % name, batch_convert2int(rec_B), max_outputs=1)
 
 
     def get_losses(self):

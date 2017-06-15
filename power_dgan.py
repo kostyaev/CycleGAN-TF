@@ -114,13 +114,13 @@ class PowerDGAN:
         self.G = G
         self.D = D
 
-        tf.summary.image('%s-A/original' % name, batch_convert2int(self.a_real))
-        tf.summary.image('%s-A/generated' % name, batch_convert2int(self.fake_B))
-        tf.summary.image('%s-A/reconstruction' % name, batch_convert2int(rec_A))
+        tf.summary.image('%s-A/original' % name, batch_convert2int(self.a_real), max_outputs=1)
+        tf.summary.image('%s-A/generated' % name, batch_convert2int(self.fake_B), max_outputs=1)
+        tf.summary.image('%s-A/reconstruction' % name, batch_convert2int(rec_A), max_outputs=1)
 
-        tf.summary.image('%s-B/original' % name, batch_convert2int(self.b_real))
-        tf.summary.image('%s-B/generated' % name, batch_convert2int(self.fake_A))
-        tf.summary.image('%s-B/reconstruction' % name, batch_convert2int(rec_B))
+        tf.summary.image('%s-B/original' % name, batch_convert2int(self.b_real), max_outputs=1)
+        tf.summary.image('%s-B/generated' % name, batch_convert2int(self.fake_A), max_outputs=1)
+        tf.summary.image('%s-B/reconstruction' % name, batch_convert2int(rec_B), max_outputs=1)
 
 
     def get_losses(self):
