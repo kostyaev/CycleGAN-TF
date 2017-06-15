@@ -71,7 +71,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     dataB = glob(data_dirs[1])
     dataC = glob(data_dirs[2])
 
-    print 'DataA: %d, DataB: %d, DataC: %d' % (dataA, dataB, dataC)
+    print 'DataA: %d, DataB: %d, DataC: %d' % (len(dataA), len(dataB), len(dataC))
 
     mirror_f = lambda x: compose(*random_subset([mirror], min_len=0, max_len=1))(x)
     crop_f = functools.partial(crop, crop_size=args.crop_size, center=False)
