@@ -68,7 +68,7 @@ def crop(img, crop_size=128, center=False):
 def random_resize_crop(img, crop_scales, resize_scales):
     idx = randint(0, len(crop_scales) - 1)
     img = resize_aspect_random(img, min_px=crop_scales[idx], max_px=resize_scales[idx+1])
-    return crop(img, crop_px, center=False)
+    return crop(img, crop_scales[idx], center=False)
 
 
 def mirror(img):
