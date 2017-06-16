@@ -75,6 +75,7 @@ class Generator:
         self.ks = ks
         self.ngf = ngf
         self.reuse = False
+        self.activation = activation
 
     def __call__(self, image):
         with tf.variable_scope(self.name):
@@ -92,7 +93,7 @@ class Generator:
             x = conv2d_transpose(x, self.ngf * 2, 3, 2, name='g_ct1')
             x = conv2d_transpose(x, self.ngf, 3, 2, name='g_ct2')
             x = tf.pad(x, [[0, 0], [2, 2], [2, 2], [0, 0]], "REFLECT")
-            x = conv2d_simple(x, 3, 5, 1, padding='VALID', activation_fn=activation, name='out')
+            x = conv2d_simple(x, 3, 5, 1, padding='VALID', activation_fn=self.activation, name='out')
 
         self.reuse = True
         self.variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
