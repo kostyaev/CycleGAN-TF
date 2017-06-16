@@ -112,8 +112,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     # fake_poolA = ImagePool(args.pool_size)
     # fake_poolB = ImagePool(args.pool_size)
 
-    fake_pools_A = [ImagePool(args.pool_size) for i in rangle(len(scales))]
-    fake_pools_B = [ImagePool(args.pool_size) for i in rangle(len(scales))]
+    fake_pools_A = [ImagePool(args.pool_size) for i in range(len(scales))]
+    fake_pools_B = [ImagePool(args.pool_size) for i in range(len(scales))]
 
 
     def query(pools, img):
