@@ -65,12 +65,10 @@ def crop(img, crop_size=128, center=False):
         w_off = (width - crop_size) / 2
     return img.crop((w_off, h_off, w_off + crop_size, h_off + crop_size))
 
-def random_resize_crop(img, min_px=128, max_px=400):
-    resize_px = randint(min_px, max_px)
-    crop_px = randint(min_px, resize_px)
-    center = float(resize_px) / crop_px > 2
-    img = resize_aspect(img, resize_px, resize_px)
-    return crop(img, crop_px, center=center)
+def random_resize_crop(img, crop_scales, resize_scales):
+    idx = randint(0, len(crop_scales) - 1)
+    img = resize_aspect_random(img, min_px=crop_scales[idx], max_px=resize_scales[idx+1])
+    return crop(img, crop_px, center=False)
 
 
 def mirror(img):

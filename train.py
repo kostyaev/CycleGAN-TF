@@ -82,10 +82,16 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     if args.multi_scale:
         print "Multiscale mode enabled"
-        ops.append(functools.partial(random_resize_crop, min_px=args.crop_size, max_px=args.scale_size))
+        crop_scales = [128, 192, 256, 320]
+        resize_scales = [128, 192, 256, 320, 400]
+        ops.append(functools.partial(random_resize_crop, crop_scales=crop_scales, resize_scales=resize_scales))
     else:
+        crop_scales = [args.crop_size]
         ops.append(functools.partial(resize_aspect_random, min_px=args.crop_size, max_px=args.scale_size))
         ops.append(functools.partial(crop, crop_size=args.crop_size, center=False))
+
+    scale2id = dict([(s, idx) for idx, s in enumerate(crop_scales)])
+
 
     if args.color_jitter:
         print "Color jittering mode enabled"
@@ -103,8 +109,16 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     generatorC = batch_generator(lambda: image_generator(dataC, train_pipeline, shuffle=True), args.batch_size)
 
 
-    fake_poolA = ImagePool(args.pool_size)
-    fake_poolB = ImagePool(args.pool_size)
+    # fake_poolA = ImagePool(args.pool_size)
+    # fake_poolB = ImagePool(args.pool_size)
+
+    fake_pools_A = [ImagePool(args.pool_size) for i in rangle(len(scales))]
+    fake_pools_B = [ImagePool(args.pool_size) for i in rangle(len(scales))]
+
+
+    def query(pools, img):
+        idx = scale2id[img.shape[1]]
+        return pools[idx].query(img)
 
 
     init = tf.global_variables_initializer()
@@ -142,7 +156,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             input_real = {model.a_real: batchA, model.b_real: batchB}
             fakeA, fakeB = sess.run([model.fake_A, model.fake_B], input_real)
 
-            fake_a_sample, fake_b_sample = fake_poolA.query(fakeA), fake_poolB.query(fakeB)
+            fake_a_sample, fake_b_sample = query(fake_pools_A, fakeA), query(fake_pools_B, fakeB)
 
             ops = [optimizers, g_loss, da_loss, db_loss]
 
