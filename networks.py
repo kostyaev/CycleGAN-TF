@@ -70,7 +70,7 @@ class PowerDiscriminator:
 
 
 class Generator:
-    def __init__(self, ngf, ks=3, name='generator'):
+    def __init__(self, ngf, ks=3, name='generator', activation=tf.nn.tanh):
         self.name = name
         self.ks = ks
         self.ngf = ngf
@@ -92,7 +92,7 @@ class Generator:
             x = conv2d_transpose(x, self.ngf * 2, 3, 2, name='g_ct1')
             x = conv2d_transpose(x, self.ngf, 3, 2, name='g_ct2')
             x = tf.pad(x, [[0, 0], [2, 2], [2, 2], [0, 0]], "REFLECT")
-            x = conv2d_simple(x, 3, 5, 1, padding='VALID', activation_fn=tf.nn.tanh, name='out')
+            x = conv2d_simple(x, 3, 5, 1, padding='VALID', activation_fn=activation, name='out')
 
         self.reuse = True
         self.variables = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)

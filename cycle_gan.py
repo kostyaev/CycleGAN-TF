@@ -49,8 +49,8 @@ class CycleGAN:
         self.fake_b_sample = tf.placeholder(tf.float32,
                                          [None, img_size, img_size, input_ch], name='fake_B_sample')
 
-        GA = Generator(ngf, name='G_A')
-        GB = Generator(ngf, name='G_B')
+        GA = Generator(ngf, name='G_A', activation=None)
+        GB = Generator(ngf, name='G_B', activation=None)
 
         #Generators
         self.fake_B = GA(self.a_real)
