@@ -29,6 +29,9 @@ parser.add_argument("--batch_size", type=int, default=1, help='training batch si
 parser.add_argument("--save_freq", type=int, default=6000, help='Save checkpoint frequency')
 parser.add_argument("--d_num_layers", type=int, default=3, help='Number of layers in discriminator')
 parser.add_argument("--display_freq", type=int, default=1000, help='Update tensorboard frequency')
+parser.add_argument("--pool_size", type=int, default=50, help='Pool size')
+parser.add_argument('--multi_scale', action='store_true', default=False,  help='Enable multiscale mode')
+parser.add_argument('--color_jitter', action='store_true', default=False,  help='Enable color jittering')
 
 
 args = parser.parse_args()
@@ -74,24 +77,34 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     print 'DataA: %d, DataB: %d, DataC: %d' % (len(dataA), len(dataB), len(dataC))
 
     mirror_f = lambda x: compose(*random_subset([mirror], min_len=0, max_len=1))(x)
-    crop_f = functools.partial(crop, crop_size=args.crop_size, center=False)
-    resize_f = functools.partial(resize_aspect_random, min_px=args.crop_size, max_px=args.scale_size)
 
-    contrast_f = functools.partial(contrast, steps=[0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
-    brightness_f = functools.partial(brightness, steps=[0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
-    saturation_f = functools.partial(saturation, steps=[0.8, 0.9, 1.0, 1.1, 1.2])
+    ops = [load_image, mirror_f]
 
-    color_jitter = lambda x: compose(*random_subset([contrast_f, brightness_f, saturation_f], min_len=0, max_len=3))(x)
+    if args.multi_scale:
+        print "Multiscale mode enabled"
+        ops.append(functools.partial(random_resize_crop, min_px=args.crop_size, max_px=args.scale_size))
+    else:
+        ops.append(functools.partial(resize_aspect_random, min_px=args.crop_size, max_px=args.scale_size))
+        ops.append(functools.partial(crop, crop_size=args.crop_size, center=False))
 
-    train_pipeline = compose(load_image, mirror_f, resize_f, crop_f, img2array, preprocess)
+    if args.color_jitter:
+        print "Color jittering mode enabled"
+        contrast_f = functools.partial(contrast,     steps=[0.8, 0.9, 1.0, 1.1, 1.2])
+        brightness_f = functools.partial(brightness, steps=[0.8, 0.9, 1.0, 1.1, 1.2])
+        saturation_f = functools.partial(saturation, steps=[0.8, 0.9, 1.0, 1.1, 1.2])
+        color_jitter = lambda x: compose(*random_subset([contrast_f, brightness_f, saturation_f], min_len=0, max_len=3))(x)
+        ops.append(color_jitter)
+
+    ops.extend([img2array, preprocess])
+    train_pipeline = compose(*ops)
 
     generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=True), args.batch_size)
     generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=True), args.batch_size)
     generatorC = batch_generator(lambda: image_generator(dataC, train_pipeline, shuffle=True), args.batch_size)
 
 
-    fake_poolA = ImagePool(50)
-    fake_poolB = ImagePool(50)
+    fake_poolA = ImagePool(args.pool_size)
+    fake_poolB = ImagePool(args.pool_size)
 
 
     init = tf.global_variables_initializer()
