@@ -101,16 +101,13 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
         color_jitter = lambda x: compose(*random_subset([contrast_f, brightness_f, saturation_f], min_len=0, max_len=3))(x)
         ops.append(color_jitter)
 
-    ops.extend([img2array, preprocess])
+    ops.extend([img2array])
     train_pipeline = compose(*ops)
 
     generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=True), args.batch_size)
     generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=True), args.batch_size)
     generatorC = batch_generator(lambda: image_generator(dataC, train_pipeline, shuffle=True), args.batch_size)
 
-
-    # fake_poolA = ImagePool(args.pool_size)
-    # fake_poolB = ImagePool(args.pool_size)
 
     fake_pools_A = [ImagePool(args.pool_size) for i in range(len(crop_scales))]
     fake_pools_B = [ImagePool(args.pool_size) for i in range(len(crop_scales))]
@@ -153,7 +150,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             batchA = generatorA.next()
             batchB = generatorB.next()
 
-            input_real = {model.a_real: batchA, model.b_real: batchB}
+            input_real = {model.input_a: batchA, model.input_b: batchB}
             fakeA, fakeB = sess.run([model.fake_A, model.fake_B], input_real)
 
             fake_a_sample, fake_b_sample = query(fake_pools_A, fakeA), query(fake_pools_B, fakeB)
@@ -162,20 +159,20 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
             if i % args.display_freq == 0:
                 _, lossG, lossDA, lossDB, summary = sess.run(ops + [summary_op],
-                                                             {model.a_real: batchA, model.b_real: batchB,
-                                                            model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
+                                                             {model.input_a: batchA, model.input_b: batchB,
+                                                            model.input_fake_a_sample: fake_a_sample, model.input_fake_b_sample: fake_b_sample, lr: curr_lr})
                 writer.add_summary(summary, step)
                 writer.flush()
             else:
                 _, lossG, lossDA, lossDB = sess.run(ops,
-                                                    {model.a_real: batchA, model.b_real: batchB,
-                                                     model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
+                                                    {model.input_a: batchA, model.input_b: batchB,
+                                                     model.input_fake_a_sample: fake_a_sample, model.input_fake_b_sample: fake_b_sample, lr: curr_lr})
 
             # Train background reconstruction
             if step % 5 == 0:
                 batchC = generatorC.next()
                 if batchC.shape[-1] == 3:
-                    _, lossRec = sess.run([rec_optim, rec_loss], {model.a_real: batchC, model.b_real: batchC, lr: curr_lr})
+                    _, lossRec = sess.run([rec_optim, rec_loss], {model.input_a: batchC, model.input_b: batchC, lr: curr_lr})
 
 
             if step % 50 == 0:

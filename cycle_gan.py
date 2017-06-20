@@ -39,19 +39,27 @@ class CycleGAN:
     def __init__(self, name, img_size=None, ngf=32, ndf=32, input_ch=3, lambda_a=5, lambda_b=5, d_num_layers=5):
         criterion_gan = mae
 
-        self.a_real = tf.placeholder(tf.float32,
-                               [None, img_size, img_size, input_ch], name='A_real')
-        self.b_real = tf.placeholder(tf.float32,
-                                       [None, img_size, img_size, input_ch], name='B_real')
 
-        self.fake_a_sample = tf.placeholder(tf.float32,
+        self.input_a = tf.placeholder(tf.uint8,
+                               [None, img_size, img_size, input_ch], name='A_real')
+
+        self.input_b = tf.placeholder(tf.uint8,
+                               [None, img_size, img_size, input_ch], name='B_real')
+
+        self.input_fake_a_sample = tf.placeholder(tf.uint8,
                                        [None, img_size, img_size, input_ch], name='fake_A_sample')
 
-        self.fake_b_sample = tf.placeholder(tf.float32,
-                                         [None, img_size, img_size, input_ch], name='fake_B_sample')
+        self.input_fake_b_sample = tf.placeholder(tf.uint8,
+                                       [None, img_size, img_size, input_ch], name='fake_B_sample')
 
-        GA = Generator(ngf, name='G_A', activation=None)
-        GB = Generator(ngf, name='G_B', activation=None)
+        self.a_real = batch_convert2float(self.input_a)
+        self.b_real = batch_convert2float(self.input_b)
+
+        self.fake_a_sample = batch_convert2float(self.input_fake_a_sample)
+        self.fake_b_sample = batch_convert2float(self.input_fake_b_sample)
+
+        GA = Generator(ngf, name='G_A', activation=tf.nn.tanh)
+        GB = Generator(ngf, name='G_B', activation=tf.nn.tanh)
 
         #Generators
         self.fake_B = GA(self.a_real)
@@ -65,7 +73,6 @@ class CycleGAN:
         #Discriminators
         DA_fake = DA(self.fake_A)
         DB_fake = DB(self.fake_B)
-
 
         #Generator Losses
         cycle_loss = lambda_a * abs_criterion(self.a_real, rec_A) + lambda_b * abs_criterion(self.b_real, rec_B)
@@ -116,6 +123,9 @@ class CycleGAN:
         tf.summary.image('%s-B/original' % name, batch_convert2int(self.b_real), max_outputs=1)
         tf.summary.image('%s-B/generated' % name, batch_convert2int(self.fake_A), max_outputs=1)
         tf.summary.image('%s-B/reconstruction' % name, batch_convert2int(rec_B), max_outputs=1)
+
+        self.fake_A_int = batch_convert2int(self.fake_A)
+        self.fake_B_int = batch_convert2int(self.fake_B)
 
 
     def get_losses(self):
