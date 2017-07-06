@@ -4,10 +4,9 @@ import os
 import sys
 import time
 from glob import glob
-import tensorflow as tf
 from cycle_gan import *
 from data_loader import *
-from image_pool import ImagePool, BatchedImagePool
+from image_pool import ImagePool
 
 
 

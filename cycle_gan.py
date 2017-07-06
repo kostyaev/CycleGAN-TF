@@ -76,7 +76,7 @@ class CycleGAN:
 
         #Generator Losses
         cycle_loss = lambda_a * abs_criterion(self.a_real, rec_A) + lambda_b * abs_criterion(self.b_real, rec_B)
-        self.g_loss = criterion_gan(DB_fake, 0.9) + criterion_gan(DA_fake, 0.9) + cycle_loss
+        self.g_loss = criterion_gan(DB_fake, 1.0) + criterion_gan(DA_fake, 1.0) + cycle_loss
 
         #Reconstruction loss for background consistency
         self.rec_loss = lambda_a * abs_criterion(self.a_real, self.fake_B) + lambda_b * abs_criterion(self.b_real, self.fake_A)
@@ -89,11 +89,11 @@ class CycleGAN:
 
 
         # Discriminator Losses
-        da_loss_real = criterion_gan(DA_real, 0.9)
+        da_loss_real = criterion_gan(DA_real, 1.0)
         da_loss_fake = criterion_gan(DA_fake_sample, 0)
         self.da_loss = (da_loss_real + da_loss_fake) * 0.5
 
-        db_loss_real = criterion_gan(DB_real, 0.9)
+        db_loss_real = criterion_gan(DB_real, 1.0)
         db_loss_fake = criterion_gan(DB_fake_sample, 0)
         self.db_loss = (db_loss_real + db_loss_fake) * 0.5
 
