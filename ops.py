@@ -2,9 +2,21 @@ import tensorflow as tf
 from tensorflow.contrib import slim
 
 
-def instance_norm(input_var, epsilon=1e-5, axis = [1,2]):
+def instance_norm_not_trainable(input_var, epsilon=1e-5, axis=(1,2)):
     mean, var = tf.nn.moments(input_var, axis, keep_dims=True)
     return (input_var - mean) / tf.sqrt(var+epsilon)
+
+
+def instance_norm(input, name="instance_norm"):
+    with tf.variable_scope(name):
+        depth = input.get_shape()[3]
+        scale = tf.get_variable("scale", [depth], initializer=tf.random_normal_initializer(1.0, 0.02, dtype=tf.float32))
+        offset = tf.get_variable("offset", [depth], initializer=tf.constant_initializer(0.0))
+        mean, variance = tf.nn.moments(input, axes=[1,2], keep_dims=True)
+        epsilon = 1e-5
+        inv = tf.rsqrt(variance + epsilon)
+        normalized = (input-mean)*inv
+        return scale*normalized + offset
 
 
 def conv2d(x, n_out, ks, stride=1, padding='SAME', name='conv2d', stddev=0.02, activation=tf.nn.relu):
