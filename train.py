@@ -167,7 +167,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
                                                      model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
 
             # Train background reconstruction
-            if step % 5 == 0:
+            if step % 10 == 0:
                 batchC = generatorC.next()
                 if batchC.shape[-1] == 3:
                     _, lossRec = sess.run([rec_optim, rec_loss], {model.a_real: batchC, model.b_real: batchC, lr: curr_lr})
