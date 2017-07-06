@@ -124,13 +124,13 @@ class Discriminator:
                 # stride = 2 if i % 2 == 1 else 1
                 stride = 2
                 x = slim.conv2d(x, self.ndf * mult, ks, stride=stride, padding=padding, activation_fn=None)
-                x = instance_norm(x)
+                x = instance_norm(x, '_norm_%d' % i)
                 x = lrelu(x)
                 mult *= stride
                 mult = min(mult, 8)
 
             x = slim.conv2d(x, self.ndf * mult, ks, stride=1, padding=padding, activation_fn=None)
-            x = instance_norm(x)
+            x = instance_norm(x, '_norm_%d' % (self.num_layers + 1))
             x = lrelu(x)
             x = conv2d_simple(x, 1, ks, stride=1, padding=padding, activation_fn=None, name='out')
 

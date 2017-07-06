@@ -23,7 +23,7 @@ def conv2d(x, n_out, ks, stride=1, padding='SAME', name='conv2d', stddev=0.02, a
     with tf.variable_scope(name):
         x = slim.conv2d(x, n_out, ks, stride, padding=padding, activation_fn = None,
                         weights_initializer=tf.truncated_normal_initializer(stddev=stddev))
-        x = instance_norm(x)
+        x = instance_norm(x, name=name+'_norm')
         if activation:
             x = activation(x)
         return x
@@ -38,7 +38,7 @@ def conv2d_transpose(x, n_out, ks, stride=1, padding='SAME', name='conv2d_transp
     with tf.variable_scope(name):
         x = slim.conv2d_transpose(x, n_out, ks, stride, padding=padding, activation_fn = None,
                                  weights_initializer=tf.truncated_normal_initializer(stddev=stddev))
-        x = instance_norm(x)
+        x = instance_norm(x, name=name+'_norm')
         x = tf.nn.relu(x)
         return x
 
