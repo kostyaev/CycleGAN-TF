@@ -4,10 +4,11 @@ import os
 import sys
 import time
 from glob import glob
+from multiprocessing import Process, Queue
+
 from cycle_gan import *
 from data_loader import *
 from image_pool import ImagePool
-
 
 
 parser = argparse.ArgumentParser()
@@ -34,6 +35,23 @@ parser.add_argument('--color_jitter', action='store_true', default=False,  help=
 
 
 args = parser.parse_args()
+
+
+class ImagePrefetcher:
+
+    def __init__(self, generator):
+        self.generator = generator
+        self.process = Process(target=self._start)
+        self.queue = Queue(maxsize=30)
+
+
+    def _start(self):
+        for batch in self.generator:
+            self.queue.put(batch)
+
+    def get(self):
+        return self.queue.get()
+
 
 
 def log(s):
@@ -103,9 +121,9 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     ops.extend([img2array, preprocess])
     train_pipeline = compose(*ops)
 
-    generatorA = batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=True), args.batch_size)
-    generatorB = batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=True), args.batch_size)
-    generatorC = batch_generator(lambda: image_generator(dataC, train_pipeline, shuffle=True), args.batch_size)
+    generatorA = ImagePrefetcher(batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=True), args.batch_size))
+    generatorB = ImagePrefetcher(batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=True), args.batch_size))
+    generatorC = ImagePrefetcher(batch_generator(lambda: image_generator(dataC, train_pipeline, shuffle=True), args.batch_size))
 
     fake_pools_A = [ImagePool(args.pool_size) for i in range(len(crop_scales))]
     fake_pools_B = [ImagePool(args.pool_size) for i in range(len(crop_scales))]
@@ -145,8 +163,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
         for i in range(iters_per_epoch):
             step += 1
 
-            batchA = generatorA.next()
-            batchB = generatorB.next()
+            batchA = generatorA.get()
+            batchB = generatorB.get()
 
             input_real = {model.a_real: batchA, model.b_real: batchB}
             fakeA, fakeB = sess.run([model.fake_A, model.fake_B], input_real)
@@ -168,7 +186,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
             # Train background reconstruction
             if step % 10 == 0:
-                batchC = generatorC.next()
+                batchC = generatorC.get()
                 if batchC.shape[-1] == 3:
                     _, lossRec = sess.run([rec_optim, rec_loss], {model.a_real: batchC, model.b_real: batchC, lr: curr_lr})
 
