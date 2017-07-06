@@ -43,6 +43,7 @@ class ImagePrefetcher:
         self.generator = generator
         self.process = Process(target=self._start)
         self.queue = Queue(maxsize=30)
+        self.process.start()
 
 
     def _start(self):
