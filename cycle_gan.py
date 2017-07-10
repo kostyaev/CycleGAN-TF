@@ -36,7 +36,7 @@ def batch_convert2float(images):
 class CycleGAN:
 
 
-    def __init__(self, name, img_size=None, ngf=32, ndf=32, input_ch=3, lambda_a=5, lambda_b=5, d_num_layers=3):
+    def __init__(self, name, img_size=None, ngf=32, ndf=32, ks=7, input_ch=3, lambda_a=5, lambda_b=5, d_num_layers=3):
         criterion_gan = mae
 
 
@@ -58,8 +58,8 @@ class CycleGAN:
         self.fake_a_sample = batch_convert2float(self.input_fake_a_sample)
         self.fake_b_sample = batch_convert2float(self.input_fake_b_sample)
 
-        GA = Generator(ngf, name='G_A', activation=tf.nn.tanh)
-        GB = Generator(ngf, name='G_B', activation=tf.nn.tanh)
+        GA = Generator(ngf, name='G_A', activation=tf.nn.tanh, ks=ks)
+        GB = Generator(ngf, name='G_B', activation=tf.nn.tanh, ks=ks)
 
         #Generators
         self.fake_B = GA(self.a_real)

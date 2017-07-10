@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("--name", help="Name of the experiment")
 parser.add_argument("--seed", default=0, type=int)
+parser.add_argument("--ks", default=7, type=int, help='Kernel size for generator')
 parser.add_argument("--dataset", help="path to folder containing images")
 parser.add_argument("--checkpoint", default='checkpoints/', help="directory with checkpoint to resume training from or use for testing")
 parser.add_argument("--tensorboard", default='tensorboard/', help='tensorboard dir')
@@ -68,7 +69,8 @@ def random_subset(f_list, min_len=0, max_len=1):
 
 
 def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='snapshots/', tensorboard_dir='tensorboard'):
-    model = CycleGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ngf=args.ngf, ndf=args.ndf, d_num_layers=args.d_num_layers)
+    model = CycleGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ks=args.ks,
+                     ngf=args.ngf, ndf=args.ndf, d_num_layers=args.d_num_layers)
     g_loss, da_loss, db_loss = model.get_losses()
     rec_loss = model.rec_loss
 
