@@ -58,8 +58,8 @@ class CycleGAN:
         self.fake_a_sample = batch_convert2float(self.input_fake_a_sample)
         self.fake_b_sample = batch_convert2float(self.input_fake_b_sample)
 
-        GA = Generator(ngf, name='G_A', activation=tf.nn.tanh)
-        GB = Generator(ngf, name='G_B', activation=tf.nn.tanh)
+        GA = Generator(ngf, name='G_A', activation=None)
+        GB = Generator(ngf, name='G_B', activation=None)
 
         #Generators
         self.fake_B = GA(self.a_real)
