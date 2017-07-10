@@ -3,7 +3,7 @@ from ops import *
 
 
 class Generator:
-    def __init__(self, ngf, ks=3, name='generator', activation=tf.nn.tanh):
+    def __init__(self, ngf, ks=7, name='generator', activation=tf.nn.tanh):
         self.name = name
         self.ks = ks
         self.ngf = ngf
