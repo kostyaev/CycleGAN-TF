@@ -5,7 +5,6 @@ import sys
 import time
 from glob import glob
 from multiprocessing import Process, Queue
-
 from cycle_gan import *
 from data_loader import *
 from image_pool import ImagePool
@@ -113,9 +112,9 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     if args.color_jitter:
         print "Color jittering mode enabled"
-        contrast_f = functools.partial(contrast,     steps=[0.8, 0.9, 1.0, 1.1, 1.2])
-        brightness_f = functools.partial(brightness, steps=[0.8, 0.9, 1.0, 1.1, 1.2])
-        saturation_f = functools.partial(saturation, steps=[0.8, 0.9, 1.0, 1.1, 1.2])
+        contrast_f = functools.partial(contrast,     steps=[0.9, 1.0, 1.1])
+        brightness_f = functools.partial(brightness, steps=[0.9, 1.0, 1.1])
+        saturation_f = functools.partial(saturation, steps=[0.9, 1.0, 1.1])
         color_jitter = lambda x: compose(*random_subset([contrast_f, brightness_f, saturation_f], min_len=0, max_len=3))(x)
         ops.append(color_jitter)
 
