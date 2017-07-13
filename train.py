@@ -8,7 +8,7 @@ from multiprocessing import Process, Queue
 from cycle_gan import *
 from data_loader import *
 from image_pool import ImagePool
-
+import signal
 
 parser = argparse.ArgumentParser()
 
@@ -208,7 +208,20 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
                 log("Model saved in file: %s" % save_path)
 
 
+class SIGINT_handler():
+    def __init__(self, session):
+        self.SIGINT = False
+        self.session = session
+
+    def signal_handler(self, signal, frame):
+        print('You pressed Ctrl+C! Exiting...')
+        self.SIGINT = True
+        self.session.close()
+        sys.exit()
+
+
 if __name__ == '__main__':
+
     tf.reset_default_graph()
     tf.set_random_seed(args.seed)
 
@@ -224,6 +237,8 @@ if __name__ == '__main__':
     config = tf.ConfigProto()
     config.gpu_options.per_process_gpu_memory_fraction = 0.3
     with tf.Session(config=config) as sess:
+        handler = SIGINT_handler(session=sess)
+        signal.signal(signal.SIGINT, handler.signal_handler)
         train(sess,
               data_dirs=[trainA, trainB, trainC],
               epochs=args.max_epochs,
