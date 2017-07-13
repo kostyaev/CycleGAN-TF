@@ -3,12 +3,13 @@ from ops import *
 
 
 class Generator:
-    def __init__(self, ngf, ks=7, name='generator', activation=tf.nn.tanh):
+    def __init__(self, ngf, ks=7, name='generator', activation=tf.nn.tanh, norm=None):
         self.name = name
         self.ks = ks
         self.ngf = ngf
         self.reuse = False
         self.activation = activation
+        self.norm = norm
 
     def __call__(self, image):
         with tf.variable_scope(self.name):
@@ -19,13 +20,13 @@ class Generator:
 
             pad = self.ks / 2
             x = tf.pad(image, [[0, 0], [pad, pad], [pad, pad], [0, 0]], "REFLECT")
-            x = conv2d(x, self.ngf, self.ks, 1, padding='VALID', name='g_c1')
-            x = conv2d(x, self.ngf * 2, 3, 2, name='g_c2')
-            x = conv2d(x, self.ngf * 4, 3, 2, name='g_c3')
+            x = conv2d(x, self.ngf, self.ks, 1, padding='VALID', name='g_c1', normalization=self.norm)
+            x = conv2d(x, self.ngf * 2, 3, 2, name='g_c2', normalization=self.norm)
+            x = conv2d(x, self.ngf * 4, 3, 2, name='g_c3', normalization=self.norm)
             for i in range(4):
-                x = res_block(x, self.ngf * 4, name='res%d_' % i)
-            x = conv2d_transpose(x, self.ngf * 2, 3, 2, name='g_ct1')
-            x = conv2d_transpose(x, self.ngf, 3, 2, name='g_ct2')
+                x = res_block(x, self.ngf * 4, name='res%d_' % i, normalization=self.norm)
+            x = conv2d_transpose(x, self.ngf * 2, 3, 2, name='g_ct1', normalization=self.norm)
+            x = conv2d_transpose(x, self.ngf, 3, 2, name='g_ct2', normalization=self.norm)
             x = tf.pad(x, [[0, 0], [pad, pad], [pad, pad], [0, 0]], "REFLECT")
             x = conv2d_simple(x, 3, self.ks, 1, padding='VALID', activation_fn=self.activation)
             if not self.activation:
@@ -37,11 +38,12 @@ class Generator:
 
 
 class Discriminator:
-    def __init__(self, ndf, name='discriminator', num_layers=3):
+    def __init__(self, ndf, name='discriminator', num_layers=3, norm=None):
         self.ndf = ndf
         self.name = name
         self.reuse = False
         self.num_layers = num_layers
+        self.norm=norm
 
     def __call__(self, image):
         ks = 4
@@ -58,13 +60,15 @@ class Discriminator:
                 # stride = 2 if i % 2 == 1 else 1
                 stride = 2
                 x = slim.conv2d(x, self.ndf * mult, ks, stride=stride, padding=padding, activation_fn=None)
-                x = instance_norm(x, '_norm_%d' % i)
+                if self.norm:
+                    x = self.norm(x, '_norm_%d' % i)
                 x = lrelu(x)
                 mult *= stride
                 mult = min(mult, 8)
 
             x = slim.conv2d(x, self.ndf * mult, ks, stride=1, padding=padding, activation_fn=None)
-            x = instance_norm(x, '_norm_%d' % (self.num_layers + 1))
+            if self.norm:
+                x = self.norm(x, '_norm_%d' % (self.num_layers + 1))
             x = lrelu(x)
             x = conv2d_simple(x, 1, ks, stride=1, padding=padding, activation_fn=None, name='out')
 

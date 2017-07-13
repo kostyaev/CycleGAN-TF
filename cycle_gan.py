@@ -35,10 +35,16 @@ def batch_convert2float(images):
 
 class CycleGAN:
 
-
-    def __init__(self, name, img_size=None, ngf=32, ndf=32, ks=7, input_ch=3, lambda_a=5, lambda_b=5, d_num_layers=3):
+    def __init__(self, name, img_size=None, ngf=32, ndf=32, ks=5, input_ch=3,
+                 lambda_a=10, lambda_b=10, d_num_layers=3, normalization='instance'):
         criterion_gan = mae
 
+        if normalization == 'instance':
+            norm = instance_norm
+        elif normalization == 'batch':
+            norm = BatchNorm()
+        else:
+            norm = None
 
         self.input_a = tf.placeholder(tf.uint8,
                                [None, img_size, img_size, input_ch], name='A_real')
@@ -58,8 +64,8 @@ class CycleGAN:
         self.fake_a_sample = batch_convert2float(self.input_fake_a_sample)
         self.fake_b_sample = batch_convert2float(self.input_fake_b_sample)
 
-        GA = Generator(ngf, name='G_A', activation=tf.nn.tanh, ks=ks)
-        GB = Generator(ngf, name='G_B', activation=tf.nn.tanh, ks=ks)
+        GA = Generator(ngf, name='G_A', activation=tf.nn.tanh, ks=ks, norm=norm)
+        GB = Generator(ngf, name='G_B', activation=tf.nn.tanh, ks=ks, norm=norm)
 
         #Generators
         self.fake_B = GA(self.a_real)
@@ -67,8 +73,8 @@ class CycleGAN:
         self.fake_A = GB(self.b_real)
         rec_B = GA(self.fake_A)
 
-        DA = Discriminator(ndf, name='D_A', num_layers=d_num_layers)
-        DB = Discriminator(ndf, name='D_B', num_layers=d_num_layers)
+        DA = Discriminator(ndf, name='D_A', num_layers=d_num_layers, norm=norm)
+        DB = Discriminator(ndf, name='D_B', num_layers=d_num_layers, norm=norm)
 
         #Discriminators
         DA_fake = DA(self.fake_A)
