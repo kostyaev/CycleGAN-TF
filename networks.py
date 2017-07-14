@@ -24,9 +24,8 @@ class Generator:
             x = conv2d(x, self.ngf, self.ks, 1, padding='VALID', name='g_c1', normalization=self.norm)
             x = conv2d(x, self.ngf * 2, 3, 2, name='g_c2', normalization=self.norm)
             x = conv2d(x, self.ngf * 4, 3, 2, name='g_c3', normalization=self.norm)
-            dilate_rate = 2 if self.dilation else 1
             for i in range(4):
-                x = res_block(x, self.ngf * 4, name='res%d_' % i, normalization=self.norm, dilation=dilate_rate**i)
+                x = res_block(x, self.ngf * 4, name='res%d_' % i, normalization=self.norm, dilation=i if self.dilation else 1)
             x = conv2d_transpose(x, self.ngf * 2, 3, 2, name='g_ct1', normalization=self.norm)
             x = conv2d_transpose(x, self.ngf, 3, 2, name='g_ct2', normalization=self.norm)
             x = tf.pad(x, [[0, 0], [pad, pad], [pad, pad], [0, 0]], "REFLECT")
