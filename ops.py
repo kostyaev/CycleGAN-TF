@@ -39,6 +39,22 @@ class BatchNorm(object):
                                             is_training=self.is_training,
                                             scope=name)
 
+class BatchNormOld(object):
+    def __init__(self, fused=True, epsilon=1e-5, momentum=0.9, is_training=True):
+        self.epsilon = epsilon
+        self.momentum = momentum
+        self.fused = fused
+        self.is_training = is_training
+
+    def __call__(self,input_var, name):
+        with tf.variable_scope(name):
+            return tf.layers.batch_normalization(input_var,
+                                                 epsilon=self.epsilon,
+                                                 momentum=self.momentum,
+                                                 training=self.is_training,
+                                                 name=name
+                                                 )
+
 
 def conv2d(x, n_out, ks, stride=1, padding='SAME', name='conv2d', stddev=0.02, activation=tf.nn.relu, normalization=None):
     with tf.variable_scope(name):

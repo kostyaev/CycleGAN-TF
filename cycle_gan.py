@@ -36,13 +36,13 @@ def batch_convert2float(images):
 class CycleGAN:
 
     def __init__(self, name, img_size=None, ngf=32, ndf=32, ks=5, input_ch=3,
-                 lambda_a=10, lambda_b=10, d_num_layers=3, normalization='instance'):
+                 lambda_a=10, lambda_b=10, d_num_layers=3, normalization='instance', training=True):
         criterion_gan = mae
 
         if normalization == 'instance':
             norm = instance_norm
         elif normalization == 'batch':
-            norm = BatchNorm()
+            norm = BatchNorm(is_training=training)
         else:
             norm = None
 
