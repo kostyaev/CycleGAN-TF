@@ -1,4 +1,3 @@
-import tensorflow as tf
 from losses import *
 from networks import *
 
@@ -6,13 +5,36 @@ def convert2int(image):
   """ Transfrom from float tensor ([-1.,1.]) to int image ([0,255])
   """
   img = (image+1.0)/2.0
-  return tf.image.convert_image_dtype(img, tf.uint8)
+  return tf.image.convert_image_dtype(img, tf.uint8, name='output')
+
 
 def convert2float(image):
   """ Transfrom from int image ([0,255]) to float tensor ([-1.,1.])
   """
   image = tf.image.convert_image_dtype(image, dtype=tf.float32)
   return (image*2.0) - 1.0
+
+
+def single_convert2int(images):
+  """
+  Args:
+    images: 4D float tensor (batch_size, image_size, image_size, depth)
+  Returns:
+    4D int tensor
+  """
+  return tf.map_fn(convert2int, images[0,:,:,:], dtype=tf.uint8)
+
+
+def single_convert2float(images):
+  """
+  Args:
+    images: 4D int tensor (batch_size, image_size, image_size, depth)
+  Returns:
+    4D float tensor
+  """
+  return tf.map_fn(convert2float, images[0,:,:,:], dtype=tf.float32)
+
+
 
 
 def batch_convert2int(images):
@@ -32,6 +54,7 @@ def batch_convert2float(images):
     4D float tensor
   """
   return tf.map_fn(convert2float, images, dtype=tf.float32)
+
 
 class CycleGAN:
 
@@ -58,11 +81,11 @@ class CycleGAN:
         self.input_fake_b_sample = tf.placeholder(tf.uint8,
                                        [None, img_size, img_size, input_ch], name='fake_B_sample')
 
-        self.a_real = batch_convert2float(self.input_a)
-        self.b_real = batch_convert2float(self.input_b)
+        self.a_real = single_convert2float(self.input_a)
+        self.b_real = single_convert2float(self.input_b)
 
-        self.fake_a_sample = batch_convert2float(self.input_fake_a_sample)
-        self.fake_b_sample = batch_convert2float(self.input_fake_b_sample)
+        self.fake_a_sample = single_convert2float(self.input_fake_a_sample)
+        self.fake_b_sample = single_convert2float(self.input_fake_b_sample)
 
         GA = Generator(ngf, name='G_A', activation=tf.nn.tanh, ks=ks, norm=norm)
         GB = Generator(ngf, name='G_B', activation=tf.nn.tanh, ks=ks, norm=norm)
@@ -122,16 +145,16 @@ class CycleGAN:
         self.DA = DA
         self.DB = DB
 
-        tf.summary.image('%s-A/original' % name, batch_convert2int(self.a_real), max_outputs=1)
-        tf.summary.image('%s-A/generated' % name, batch_convert2int(self.fake_B), max_outputs=1)
-        tf.summary.image('%s-A/reconstruction' % name, batch_convert2int(rec_A), max_outputs=1)
+        tf.summary.image('%s-A/original' % name, single_convert2int(self.a_real), max_outputs=1)
+        tf.summary.image('%s-A/generated' % name, single_convert2int(self.fake_B), max_outputs=1)
+        tf.summary.image('%s-A/reconstruction' % name, single_convert2int(rec_A), max_outputs=1)
 
-        tf.summary.image('%s-B/original' % name, batch_convert2int(self.b_real), max_outputs=1)
-        tf.summary.image('%s-B/generated' % name, batch_convert2int(self.fake_A), max_outputs=1)
-        tf.summary.image('%s-B/reconstruction' % name, batch_convert2int(rec_B), max_outputs=1)
+        tf.summary.image('%s-B/original' % name, single_convert2int(self.b_real), max_outputs=1)
+        tf.summary.image('%s-B/generated' % name, single_convert2int(self.fake_A), max_outputs=1)
+        tf.summary.image('%s-B/reconstruction' % name, single_convert2int(rec_B), max_outputs=1)
 
-        self.fake_A_int = batch_convert2int(self.fake_A)
-        self.fake_B_int = batch_convert2int(self.fake_B)
+        self.fake_A_int = single_convert2int(self.fake_A)
+        self.fake_B_int = single_convert2int(self.fake_B)
 
 
     def get_losses(self):
