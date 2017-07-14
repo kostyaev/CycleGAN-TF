@@ -106,8 +106,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     if args.multi_scale:
         print "Multiscale mode enabled"
-        crop_scales = [192, 256, 300, 380]
-        resize_scales = [192, 256, 300, 380, 420]
+        crop_scales = [192, 256, 320, 384]
+        resize_scales = [192, 256, 320, 384, 420]
         ops.append(functools.partial(random_resize_crop, crop_scales=crop_scales, resize_scales=resize_scales))
     else:
         crop_scales = [args.crop_size]
