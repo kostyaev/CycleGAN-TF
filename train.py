@@ -32,6 +32,7 @@ parser.add_argument("--display_freq", type=int, default=1000, help='Update tenso
 parser.add_argument("--pool_size", type=int, default=50, help='Pool size')
 parser.add_argument('--multi_scale', action='store_true', default=False,  help='Enable multiscale mode')
 parser.add_argument('--color_jitter', action='store_true', default=False,  help='Enable color jittering')
+parser.add_argument('--dilated', action='store_true', default=False,  help='Enable dilated convolutions')
 parser.add_argument("--normalization", type=str, choices=['none', 'instance', 'batch'], default='instance', help='Choose normalization type')
 
 
@@ -73,7 +74,8 @@ def random_subset(f_list, min_len=0, max_len=1):
 def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='snapshots/', tensorboard_dir='tensorboard'):
     print 'Chosen %s normalization type' % args.normalization
     model = CycleGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ks=args.ks,
-                     ngf=args.ngf, ndf=args.ndf, d_num_layers=args.d_num_layers, normalization=args.normalization)
+                     ngf=args.ngf, ndf=args.ndf, d_num_layers=args.d_num_layers,
+                     normalization=args.normalization, dilated=args.dilated)
     g_loss, da_loss, db_loss = model.get_losses()
     rec_loss = model.rec_loss
 

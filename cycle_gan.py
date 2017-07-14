@@ -14,7 +14,7 @@ def postprocess_image(image, name=None):
 class CycleGAN:
 
     def __init__(self, name, img_size=None, ngf=32, ndf=32, ks=5, input_ch=3,
-                 lambda_a=10, lambda_b=10, d_num_layers=3, normalization='instance', training=True):
+                 lambda_a=10, lambda_b=10, d_num_layers=3, normalization='instance', training=True, dilated=False):
         criterion_gan = mae
 
         if normalization == 'instance':
@@ -42,8 +42,8 @@ class CycleGAN:
         self.fake_a_sample = preprocess_image(self.input_fake_a_sample)
         self.fake_b_sample = preprocess_image(self.input_fake_b_sample)
 
-        GA = Generator(ngf, name='G_A', activation=tf.nn.tanh, ks=ks, norm=norm)
-        GB = Generator(ngf, name='G_B', activation=tf.nn.tanh, ks=ks, norm=norm)
+        GA = Generator(ngf, name='G_A', activation=tf.nn.tanh, ks=ks, norm=norm, dilation=dilated)
+        GB = Generator(ngf, name='G_B', activation=tf.nn.tanh, ks=ks, norm=norm, dilation=dilated)
 
         #Generators
         self.fake_B = GA(self.a_real)
