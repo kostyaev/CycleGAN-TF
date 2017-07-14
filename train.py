@@ -80,7 +80,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     summary_op = tf.summary.merge_all()
     writer = tf.summary.FileWriter(tensorboard_dir, sess.graph)
     restorer = tf.train.Saver()
-    saver = tf.train.Saver(max_to_keep=100)
+    saver = tf.train.Saver(max_to_keep=200)
 
     lr = tf.placeholder(tf.float32, shape=[], name="lr")
 
