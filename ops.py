@@ -86,8 +86,8 @@ def conv2d_transpose(x, n_out, ks, stride=1, padding='SAME', name='conv2d_transp
 
 def res_block(input_x, ngf, ks=3, name='res_', normalization=None, dilation=1):
     p = int((ks - 1) / 2) + dilation - 1
-    x = tf.pad(input_x, [[0, 0], [p, p], [p, p], [0, 0]], 'REFLECT')
-    x = conv2d(x, ngf/2, 1, 1, padding='VALID', name=name+'_c1', normalization=normalization, dilation=dilation)
+    # x = tf.pad(input_x, [[0, 0], [p, p], [p, p], [0, 0]], 'REFLECT')
+    x = conv2d(input_x, ngf/2, 1, 1, padding='VALID', name=name+'_c1', normalization=normalization, dilation=dilation)
     x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]], 'REFLECT')
     x = conv2d(x, ngf, ks, 1, padding='VALID', name=name+'_c2', normalization=normalization,
                activation=None, dilation=dilation)
