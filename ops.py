@@ -59,7 +59,7 @@ class BatchNormOld(object):
 def conv2d(x, n_out, ks, stride=1, padding='SAME', name='conv2d', stddev=0.02, activation=tf.nn.relu, normalization=None, dilation=1):
     with tf.variable_scope(name):
         x = slim.conv2d(x, n_out, ks, stride, padding=padding, activation_fn = None,
-                        weights_initializer=tf.truncated_normal_initializer(stddev=stddev), rate=(dilation, dilation))
+                        weights_initializer=tf.truncated_normal_initializer(stddev=stddev), rate=dilation)
         if normalization:
             x = normalization(x, name=name+'_norm')
         if activation:
@@ -87,7 +87,7 @@ def conv2d_transpose(x, n_out, ks, stride=1, padding='SAME', name='conv2d_transp
 def res_block(input_x, ngf, ks=3, name='res_', normalization=None, dilation=1):
     p = int((ks - 1) / 2) + dilation - 1
     x = tf.pad(input_x, [[0, 0], [p, p], [p, p], [0, 0]], 'REFLECT')
-    x = conv2d(x, ngf, ks, 1, padding='VALID', name=name+'_c1', normalization=normalization, dilation=dilation)
+    x = conv2d(x, ngf/2, 1, 1, padding='VALID', name=name+'_c1', normalization=normalization, dilation=dilation)
     x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]], 'REFLECT')
     x = conv2d(x, ngf, ks, 1, padding='VALID', name=name+'_c2', normalization=normalization,
                activation=None, dilation=dilation)

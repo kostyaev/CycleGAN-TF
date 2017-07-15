@@ -21,7 +21,7 @@ class Generator:
 
             pad = self.ks / 2
             x = tf.pad(image, [[0, 0], [pad, pad], [pad, pad], [0, 0]], "REFLECT")
-            x = conv2d(x, self.ngf, self.ks, 2, padding='VALID', name='g_c1', normalization=self.norm)
+            x = conv2d(x, self.ngf, self.ks, 1, padding='VALID', name='g_c1', normalization=self.norm)
             x = conv2d(x, self.ngf * 2, 3, 2, name='g_c2', normalization=self.norm)
             x = conv2d(x, self.ngf * 4, 3, 2, name='g_c3', normalization=self.norm)
             for i in range(4):
@@ -29,7 +29,6 @@ class Generator:
                               normalization=self.norm, dilation=i + 1 if self.dilation else 1)
             x = conv2d_transpose(x, self.ngf * 2, 3, 2, name='g_ct1', normalization=self.norm)
             x = conv2d_transpose(x, self.ngf, 3, 2, name='g_ct2', normalization=self.norm)
-            x = conv2d_transpose(x, self.ngf, 3, 2, name='g_ct3', normalization=self.norm)
             x = tf.pad(x, [[0, 0], [pad, pad], [pad, pad], [0, 0]], "REFLECT")
             x = conv2d_simple(x, 3, self.ks, 1, padding='VALID', activation_fn=self.activation)
             if not self.activation:
