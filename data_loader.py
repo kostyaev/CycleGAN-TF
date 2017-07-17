@@ -28,7 +28,7 @@ def load_image(path):
     return Image.open(path)
 
 
-def resize_aspect(img, min_px=128, max_px=128):
+def resize_aspect(img, min_px=400, max_px=400):
     width = img.size[0]
     height = img.size[1]
     smallest = min(width, height)

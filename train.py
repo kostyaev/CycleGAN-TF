@@ -79,7 +79,11 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     g_loss, da_loss, db_loss = model.get_losses()
     rec_loss = model.rec_loss
 
-    summary_op = tf.summary.merge_all()
+    # Visualize test data
+    test_input = tf.placeholder(tf.float32, [None, None, None, 3], name='test_input')
+    show_a2b = tf.summary.image('%s-A/A2B' % args.name, test_input)
+    show_b2a = tf.summary.image('%s-A/B2A' % args.name, test_input)
+
     writer = tf.summary.FileWriter(tensorboard_dir, sess.graph)
     restorer = tf.train.Saver()
     saver = tf.train.Saver(max_to_keep=200)
@@ -94,9 +98,13 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     with tf.control_dependencies([g_optim, da_optim, db_optim]):
         optimizers = tf.no_op(name='optimizers')
 
+
     dataA = glob(data_dirs[0])
     dataB = glob(data_dirs[1])
+    data_testA = glob(data_dirs[2])
+    data_testB = glob(data_dirs[2])
     dataC = glob(data_dirs[2])
+
 
     print 'DataA: %d, DataB: %d, DataC: %d' % (len(dataA), len(dataB), len(dataC))
 
@@ -127,6 +135,14 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     ops.extend([img2array, preprocess])
     train_pipeline = compose(*ops)
+    test_pipeline = compose(load_image,
+                            functools.partial(resize_aspect, min_px=400, max_px=400),
+                            functools.partial(crop, crop_size=400, center=True),
+                            img2array,
+                            preprocess)
+
+    test_imagesA = list(image_generator(data_testA, test_pipeline, shuffle=False))
+    test_imagesB = list(image_generator(data_testB, test_pipeline, shuffle=False))
 
     generatorA = ImagePrefetcher(batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=True), args.batch_size))
     generatorB = ImagePrefetcher(batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=True), args.batch_size))
@@ -181,7 +197,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
             ops = [optimizers, g_loss, da_loss, db_loss]
 
             if i % args.display_freq == 0:
-                _, lossG, lossDA, lossDB, summary = sess.run(ops + [summary_op],
+                _, lossG, lossDA, lossDB, summary = sess.run(ops + [model.summary],
                                                              {model.a_real: batchA, model.b_real: batchB,
                                                             model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
                 writer.add_summary(summary, step)
@@ -203,7 +219,28 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
                 log('Step %d: G_loss: %.3f, Rec_loss: %.3f, DA_loss: %.3f, DB_loss: %.3f, time: %.3fs' % (step, lossG, lossRec, lossDA, lossDB, end_iter - start_iter))
                 start_iter = time.time()
 
+
+            def save_images(images, is_a2b=True):
+                result = []
+                if is_a2b:
+                    out_ = model.fake_B_int
+                    in_ = model.input_a
+                else:
+                    out_ = model.fake_A_int
+                    in_ = model.input_b
+                for real in images:
+                    fake = sess.run(out_, {in_: real})
+                    collage = np.hstack((real[0], fake[0]))
+                    result.append(collage)
+                op = show_a2b if is_a2b else show_b2a
+                summ = sess.run(op, {test_input: np.array(result)})
+                writer.add_summary(summ, step)
+                writer.flush()
+
+
             if step % args.save_freq == 0:
+                save_images(test_imagesA, is_a2b=True)
+                save_images(test_imagesB, is_a2b=False)
                 if not os.path.exists(checkpoints_dir):
                     os.makedirs(checkpoints_dir)
                 save_path = saver.save(sess, checkpoints_dir + "/model_epoch_%d.ckpt" % epoch, global_step=step)
@@ -229,6 +266,8 @@ if __name__ == '__main__':
 
     trainA = os.path.join(args.dataset, 'trainA') + '/*.jpg'
     trainB = os.path.join(args.dataset, 'trainB') + '/*.jpg'
+    testA = os.path.join(args.dataset, 'testA') + '/*.jpg'
+    testB = os.path.join(args.dataset, 'testB') + '/*.jpg'
     trainC = '/root/storage/playbooks/data/image-turk/backgrounds/*.JPEG'
 
     tensorboard_dir = os.path.join(args.tensorboard, args.name)
@@ -242,7 +281,7 @@ if __name__ == '__main__':
         handler = SIGINT_handler(session=sess)
         signal.signal(signal.SIGINT, handler.signal_handler)
         train(sess,
-              data_dirs=[trainA, trainB, trainC],
+              data_dirs=[trainA, trainB, testA, testB, trainC],
               epochs=args.max_epochs,
               checkpoints_dir=checkpoints_dir,
               tensorboard_dir=tensorboard_dir)

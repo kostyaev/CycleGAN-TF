@@ -48,7 +48,7 @@ class CycleGAN:
         #Generators
         self.fake_B = GA(self.a_real)
         rec_A = GB(self.fake_B)
-        self.fake_A = GB(self.b_real)
+        self.fake_A = GB(self._real)
         rec_B = GA(self.fake_A)
 
         DA = Discriminator(ndf, name='D_A', num_layers=d_num_layers, norm=norm)
@@ -92,35 +92,20 @@ class CycleGAN:
         db_loss_real_sum = tf.summary.scalar('DB/loss_real', db_loss_real)
         db_loss_fake_sum = tf.summary.scalar('DB/loss_fake', db_loss_fake)
 
-        self.da_sum = tf.summary.merge([self.da_loss_sum, da_loss_real_sum, da_loss_fake_sum])
-        self.db_sum = tf.summary.merge([self.db_loss_sum, db_loss_real_sum, db_loss_fake_sum])
-
+        self.summary = tf.summary.merge([self.da_loss_sum, da_loss_real_sum, da_loss_fake_sum,
+                                        self.db_loss_sum, db_loss_real_sum, db_loss_fake_sum])
         self.GA = GA
         self.GB = GB
         self.DA = DA
         self.DB = DB
 
-        tf.summary.image('%s-A/original' % name, postprocess_image(self.a_real), max_outputs=1)
-        tf.summary.image('%s-A/generated' % name, postprocess_image(self.fake_B), max_outputs=1)
-        tf.summary.image('%s-A/reconstruction' % name, postprocess_image(rec_A), max_outputs=1)
-
-        tf.summary.image('%s-B/original' % name, postprocess_image(self.b_real), max_outputs=1)
-        tf.summary.image('%s-B/generated' % name, postprocess_image(self.fake_A), max_outputs=1)
-        tf.summary.image('%s-B/reconstruction' % name, postprocess_image(rec_B), max_outputs=1)
-
         self.fake_A_int = postprocess_image(self.fake_A, name='A_fake')
         self.fake_B_int = postprocess_image(self.fake_B, name='B_fake')
 
 
+
     def get_losses(self):
         return self.g_loss, self.da_loss, self.db_loss
-
-
-
-
-
-
-
 
 
 
