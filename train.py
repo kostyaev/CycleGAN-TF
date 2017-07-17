@@ -102,8 +102,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     dataA = glob(data_dirs[0])
     dataB = glob(data_dirs[1])
     data_testA = glob(data_dirs[2])
-    data_testB = glob(data_dirs[2])
-    dataC = glob(data_dirs[2])
+    data_testB = glob(data_dirs[3])
+    dataC = glob(data_dirs[4])
 
 
     print 'DataA: %d, DataB: %d, DataC: %d' % (len(dataA), len(dataB), len(dataC))
