@@ -81,8 +81,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     # Visualize test data
     test_input = tf.placeholder(tf.uint8, [None, None, None, 3], name='test_input')
-    show_a2b = tf.summary.image('%s-A/A2B' % args.name, test_input)
-    show_b2a = tf.summary.image('%s-A/B2A' % args.name, test_input)
+    show_a2b = tf.summary.image('%s/A2B' % args.name, test_input)
+    show_b2a = tf.summary.image('%s/B2A' % args.name, test_input)
 
     writer = tf.summary.FileWriter(tensorboard_dir, sess.graph)
     restorer = tf.train.Saver()
@@ -142,6 +142,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     test_imagesA = list(image_generator(data_testA, test_pipeline, shuffle=False))
     test_imagesB = list(image_generator(data_testB, test_pipeline, shuffle=False))
+    print 'Test data A: %d, test data B: %d' % (len(test_imagesA), len(test_imagesB))
 
     generatorA = ImagePrefetcher(batch_generator(lambda: image_generator(dataA, train_pipeline, shuffle=True), args.batch_size))
     generatorB = ImagePrefetcher(batch_generator(lambda: image_generator(dataB, train_pipeline, shuffle=True), args.batch_size))
