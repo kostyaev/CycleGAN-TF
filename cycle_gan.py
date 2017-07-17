@@ -48,7 +48,7 @@ class CycleGAN:
         #Generators
         self.fake_B = GA(self.a_real)
         rec_A = GB(self.fake_B)
-        self.fake_A = GB(self._real)
+        self.fake_A = GB(self.b_real)
         rec_B = GA(self.fake_A)
 
         DA = Discriminator(ndf, name='D_A', num_layers=d_num_layers, norm=norm)
