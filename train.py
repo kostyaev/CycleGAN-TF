@@ -80,7 +80,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     rec_loss = model.rec_loss
 
     # Visualize test data
-    test_input = tf.placeholder(tf.float32, [None, None, None, 3], name='test_input')
+    test_input = tf.placeholder(tf.uint8, [None, None, None, 3], name='test_input')
     show_a2b = tf.summary.image('%s-A/A2B' % args.name, test_input)
     show_b2a = tf.summary.image('%s-A/B2A' % args.name, test_input)
 
@@ -138,8 +138,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     test_pipeline = compose(load_image,
                             functools.partial(resize_aspect, min_px=400, max_px=400),
                             functools.partial(crop, crop_size=400, center=True),
-                            img2array,
-                            preprocess)
+                            img2array)
 
     test_imagesA = list(image_generator(data_testA, test_pipeline, shuffle=False))
     test_imagesB = list(image_generator(data_testB, test_pipeline, shuffle=False))
@@ -239,6 +238,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
 
             if step % args.save_freq == 0:
+                log("Testing model...")
                 save_images(test_imagesA, is_a2b=True)
                 save_images(test_imagesB, is_a2b=False)
                 if not os.path.exists(checkpoints_dir):
