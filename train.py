@@ -81,8 +81,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
 
     # Visualize test data
     test_input = tf.placeholder(tf.uint8, [None, None, None, 3], name='test_input')
-    show_a2b = tf.summary.image('%s/A2B' % args.name, test_input)
-    show_b2a = tf.summary.image('%s/B2A' % args.name, test_input)
+    show_a2b = tf.summary.image('%s/A2B' % args.name, test_input, max_outputs=200)
+    show_b2a = tf.summary.image('%s/B2A' % args.name, test_input, max_outputs=200)
 
     writer = tf.summary.FileWriter(tensorboard_dir, sess.graph)
     restorer = tf.train.Saver()
