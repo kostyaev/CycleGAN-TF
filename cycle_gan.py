@@ -13,7 +13,7 @@ def postprocess_image(image, name=None):
 
 class CycleGAN:
 
-    def __init__(self, name, img_size=None, ngf=32, ndf=32, ks=5, input_ch=3,
+    def __init__(self, name, img_size=None, ngf=32, ndf=32, ks=5, input_ch=3, batch_size=1,
                  lambda_a=10, lambda_b=10, d_num_layers=3, normalization='instance', training=True, dilated=False):
         criterion_gan = mae
 
@@ -25,16 +25,16 @@ class CycleGAN:
             norm = None
 
         self.input_a = tf.placeholder(tf.uint8,
-                               [None, img_size, img_size, input_ch], name='A_real')
+                               [batch_size, img_size, img_size, input_ch], name='A_real')
 
         self.input_b = tf.placeholder(tf.uint8,
-                               [None, img_size, img_size, input_ch], name='B_real')
+                               [batch_size, img_size, img_size, input_ch], name='B_real')
 
         self.input_fake_a_sample = tf.placeholder(tf.uint8,
-                                       [None, img_size, img_size, input_ch], name='fake_A_sample')
+                                       [batch_size, img_size, img_size, input_ch], name='fake_A_sample')
 
         self.input_fake_b_sample = tf.placeholder(tf.uint8,
-                                       [None, img_size, img_size, input_ch], name='fake_B_sample')
+                                       [batch_size, img_size, img_size, input_ch], name='fake_B_sample')
 
         self.a_real = preprocess_image(self.input_a)
         self.b_real = preprocess_image(self.input_b)

@@ -34,6 +34,7 @@ parser.add_argument('--multi_scale', action='store_true', default=False,  help='
 parser.add_argument('--color_jitter', action='store_true', default=False,  help='Enable color jittering')
 parser.add_argument('--dilated', action='store_true', default=False,  help='Enable dilated convolutions')
 parser.add_argument("--normalization", type=str, choices=['none', 'instance', 'batch'], default='instance', help='Choose normalization type')
+parser.add_argument("--test_size", type=int, default=256, help="test size")
 
 
 
@@ -73,7 +74,8 @@ def random_subset(f_list, min_len=0, max_len=1):
 
 def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='snapshots/', tensorboard_dir='tensorboard'):
     print 'Chosen %s normalization type' % args.normalization
-    model = CycleGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ks=args.ks,
+    img_size = None if args.multi_scale else args.crop_size
+    model = CycleGAN(name=args.name, lambda_a=10.0, lambda_b=10.0, ks=args.ks, img_size=img_size, batch_size=args.batch_size,
                      ngf=args.ngf, ndf=args.ndf, d_num_layers=args.d_num_layers,
                      normalization=args.normalization, dilated=args.dilated)
     g_loss, da_loss, db_loss = model.get_losses()
@@ -136,8 +138,8 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     ops.extend([img2array, preprocess])
     train_pipeline = compose(*ops)
     test_pipeline = compose(load_image,
-                            functools.partial(resize_aspect, min_px=400, max_px=400),
-                            functools.partial(crop, crop_size=400, center=True),
+                            functools.partial(resize_aspect, min_px=args.test_size, max_px=args.test_size),
+                            functools.partial(crop, crop_size=args.test_size, center=True),
                             img2array)
 
     test_imagesA = list(image_generator(data_testA, test_pipeline, shuffle=False))
