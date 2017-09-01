@@ -35,7 +35,7 @@ parser.add_argument('--color_jitter', action='store_true', default=False,  help=
 parser.add_argument('--dilated', action='store_true', default=False,  help='Enable dilated convolutions')
 parser.add_argument("--normalization", type=str, choices=['none', 'instance', 'batch'], default='instance', help='Choose normalization type')
 parser.add_argument("--test_size", type=int, default=256, help="test size")
-
+parser.add_argument("--backgrounds", default=None, help="path to folder containing images of background")
 
 
 args = parser.parse_args()
@@ -105,7 +105,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
     dataB = glob(data_dirs[1])
     data_testA = glob(data_dirs[2])
     data_testB = glob(data_dirs[3])
-    dataC = glob(data_dirs[4])
+    dataC = glob(data_dirs[4]) if data_dirs[4] is not None else []
 
 
     print 'DataA: %d, DataB: %d, DataC: %d' % (len(dataA), len(dataB), len(dataC))
@@ -210,7 +210,7 @@ def train(sess, data_dirs, epochs, start_lr=2e-4, beta1=0.5, checkpoints_dir='sn
                                                      model.fake_a_sample: fake_a_sample, model.fake_b_sample: fake_b_sample, lr: curr_lr})
 
             # Train background reconstruction
-            if step % 10 == 0:
+            if len(dataC) > 0 and step % 10 == 0:
                 batchC = generatorC.get()
                 if batchC.shape[-1] == 3:
                     _, lossRec = sess.run([rec_optim, rec_loss], {model.a_real: batchC, model.b_real: batchC, lr: curr_lr})
@@ -271,12 +271,12 @@ if __name__ == '__main__':
     trainB = os.path.join(args.dataset, 'trainB') + '/*.jpg'
     testA = os.path.join(args.dataset, 'testA') + '/*.jpg'
     testB = os.path.join(args.dataset, 'testB') + '/*.jpg'
-    trainC = '/root/storage/playbooks/data/image-turk/backgrounds/*.JPEG'
+    trainC = args.backgrounds + '/*.jpg' if args.backgrounds is not None else None
 
     tensorboard_dir = os.path.join(args.tensorboard, args.name)
     checkpoints_dir = os.path.join(args.checkpoint, args.name)
 
-    print trainA, trainB, trainC
+    print trainA, trainB
 
     config = tf.ConfigProto()
     config.gpu_options.per_process_gpu_memory_fraction = 0.3
